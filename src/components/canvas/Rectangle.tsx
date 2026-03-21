@@ -1,25 +1,31 @@
+import type { Color, RectangleLayer } from "~/types";
+import { memo } from "react";
 import { colorObjToHex } from "~/lib/utils";
-import type { RectangleLayer } from "~/types";
 
-function Rectangle({ id, layer }: { id: string; layer: RectangleLayer }) {
-  const { x, y, width, height, fill, stroke, opacity, cornerRadius } = layer;
+const getHexColor = (colorObj: Color) =>
+  colorObj ? colorObjToHex(colorObj) : "#ccc";
 
-  return (
-    <g>
+const Rectangle = memo(
+  ({ id, layer }: { id: string; layer: RectangleLayer }) => {
+    const { x, y, width, height, fill, stroke, opacity, cornerRadius } = layer;
+
+    return (
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
-        fill={fill ? colorObjToHex(fill) : "#ccc"}
+        fill={getHexColor(fill)}
         strokeWidth={1}
-        stroke={stroke ? colorObjToHex(stroke) : "#ccc"}
+        stroke={getHexColor(stroke)}
         opacity={opacity}
         rx={cornerRadius ?? 0}
         ry={cornerRadius ?? 0}
       />
-    </g>
-  );
-}
+    );
+  },
+);
+
+Rectangle.displayName = "Rectangle";
 
 export default Rectangle;

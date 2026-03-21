@@ -32,7 +32,7 @@ export type RectangleLayer = {
   fill: Color;
   stroke: Color; // border color
   cornerRadius?: number;
-  opacity: number; // 1-100
+  opacity: number; // 0-1
 };
 
 export type EllipseLayer = {
@@ -43,7 +43,7 @@ export type EllipseLayer = {
   height: number;
   fill: Color;
   stroke: Color; // border color
-  opacity: number; // 1-100
+  opacity: number; // 0-1
 };
 
 export type PathLayer = {
@@ -55,7 +55,7 @@ export type PathLayer = {
   height: number;
   fill: Color;
   stroke: Color; // border color
-  opacity: number; // 1-100
+  opacity: number; // 0-1
 };
 
 export type TextLayer = {
@@ -70,7 +70,26 @@ export type TextLayer = {
   fontWeight: number;
   fill: Color;
   stroke: Color; // border color
-  opacity: number; // 1-100
+  opacity: number; // 0-1
 };
 
 export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer;
+
+export enum CanvasMode {
+  MOVING, // for moving cursor (pointer) freely
+  INSERTING, // for inserting a layer on the canvas
+  DRAGGING, // for dragging a layer on the canvas
+}
+
+export type CanvasState =
+  | {
+      mode: CanvasMode.MOVING;
+    }
+  | {
+      mode: CanvasMode.INSERTING;
+      layer: LayerType.RECTANGLE | LayerType.ELLIPSE | LayerType.TEXT;
+    }
+  | {
+      mode: CanvasMode.DRAGGING;
+      origin: Point | null;
+    };

@@ -2,6 +2,7 @@ import { useStorage } from "@liveblocks/react";
 import { memo } from "react";
 import { LayerType } from "~/types";
 import Rectangle from "./Rectangle";
+import Ellipse from "./Ellipse";
 
 const CustomLayer = memo(({ id }: { id: string }) => {
   const layer = useStorage((root) => root.layers.get(id));
@@ -13,6 +14,8 @@ const CustomLayer = memo(({ id }: { id: string }) => {
   switch (layer.type) {
     case LayerType.RECTANGLE:
       return <Rectangle id={id} layer={layer} />;
+    case LayerType.ELLIPSE:
+      return <Ellipse id={id} layer={layer} />;
     default:
       return null;
   }
