@@ -238,7 +238,7 @@ function Canvas() {
         insertPath();
       }
     },
-    [layerIds, camera, canvasState, setCanvasState, insertLayer], // necessary for the guard above
+    [layerIds, camera, canvasState, setCanvasState, insertLayer, insertPath], // necessary for the guard above
   );
 
   const handleOnWheel = useCallback(

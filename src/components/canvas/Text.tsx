@@ -67,11 +67,12 @@ const Text = memo(({ id, layer }: { id: string; layer: TextLayer }) => {
 
   const handleBlur = () => commitEdit();
 
+  // Focus input on double click
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isEditing, inputRef.current]);
+  }, [isEditing]);
 
   return (
     <g onDoubleClick={handleDoubleClick}>
