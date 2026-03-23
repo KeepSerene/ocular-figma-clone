@@ -50,11 +50,13 @@ export type PathLayer = {
   type: LayerType.PATH;
   x: number;
   y: number;
-  points: Point[]; // [[x1, y1],[x2, y2],...]
+  // Points is stored as tuples [x, y, pressure] — relative to the layer origin (x, y)
+  // pressure (0–1) is preserved here for variable-width stroke rendering
+  points: [number, number, number][];
   width: number;
   height: number;
   fill: Color;
-  stroke: Color; // border color
+  stroke: Color;
   opacity: number; // 0-1
 };
 
@@ -79,6 +81,7 @@ export enum CanvasMode {
   MOVING, // for moving cursor (pointer) freely
   INSERTING, // for inserting a layer on the canvas
   DRAGGING, // for dragging a layer on the canvas
+  PENCIL, // for free-hand drawing
 }
 
 export type CanvasState =
@@ -92,4 +95,7 @@ export type CanvasState =
   | {
       mode: CanvasMode.DRAGGING;
       origin: Point | null;
+    }
+  | {
+      mode: CanvasMode.PENCIL;
     };

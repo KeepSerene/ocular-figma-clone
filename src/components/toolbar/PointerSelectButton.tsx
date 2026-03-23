@@ -57,7 +57,7 @@ const PointerSelectButton = memo(
           ariaLabel={isMoving ? "Move" : isDragging ? "Drag" : "Move"}
           title={isMoving ? "Move" : isDragging ? "Drag" : "Move"}
         >
-          {/* Default option */}
+          {/* Default pointer: move */}
           {!isMoving && !isDragging && <MousePointer2 className="size-5" />}
           {isMoving && <MousePointer2 className="size-5" />}
           {isDragging && <Hand className="size-5" />}
@@ -67,8 +67,8 @@ const PointerSelectButton = memo(
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Click to toggle pointers menu"
-          title="Toggle pointers menu"
+          aria-label={`Click to ${isOpen ? "close" : "open"} pointers menu`}
+          title={`${isOpen ? "Close" : "Open"} pointers menu`}
         >
           {isOpen ? (
             <ChevronDown className="size-3" />
@@ -77,7 +77,7 @@ const PointerSelectButton = memo(
           )}
         </button>
 
-        {/* Selection menu */}
+        {/* Pointers selection menu */}
         {isOpen && (
           <div className="absolute -top-20 min-w-37.5 rounded-xl bg-[#f5f5f5] p-2 text-gray-900 shadow-lg">
             <button

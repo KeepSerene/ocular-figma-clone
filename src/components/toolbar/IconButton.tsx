@@ -19,8 +19,8 @@ const IconButton = ({
     type="button"
     onClick={onClick}
     disabled={disabled}
-    aria-label={ariaLabel}
-    title={title}
+    aria-label={!disabled ? ariaLabel : ""}
+    title={!disabled ? title : ""}
     className={`flex min-h-7 min-w-7 items-center justify-center rounded-md text-gray-500 transition-colors focus-visible:outline-none hover:enabled:text-gray-700 focus-visible:enabled:text-gray-700 disabled:opacity-50 ${isActive ? "bg-blue-100 text-blue-700! hover:enabled:text-blue-700 focus-visible:enabled:text-blue-700" : ""}`}
   >
     {children}

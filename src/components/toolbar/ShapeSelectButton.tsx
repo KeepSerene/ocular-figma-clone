@@ -20,10 +20,15 @@ const ShapeSelectButton = memo(
     const [isOpen, setIsOpen] = useState(false);
     const menuParentRef = useRef<HTMLDivElement>(null);
 
-    const isInserting = canvasState.mode === CanvasMode.INSERTING;
+    const isInsertingShape =
+      canvasState.mode === CanvasMode.INSERTING &&
+      canvasState.layer !== LayerType.TEXT;
     const isRectangle =
-      isInserting && canvasState.layer === LayerType.RECTANGLE;
-    const isEllipse = isInserting && canvasState.layer === LayerType.ELLIPSE;
+      isInsertingShape && canvasState.layer === LayerType.RECTANGLE;
+    const isEllipse =
+      isInsertingShape &&
+      !isRectangle &&
+      canvasState.layer === LayerType.ELLIPSE;
 
     const handleMenuItemClick = (
       layer: LayerType.RECTANGLE | LayerType.ELLIPSE,
@@ -55,30 +60,34 @@ const ShapeSelectButton = memo(
           isActive={isActive}
           onClick={() => onClick(LayerType.RECTANGLE)}
           ariaLabel={
-            !isInserting
+            !isInsertingShape
               ? "Insert Rectangle"
               : isRectangle
                 ? "Insert rectangle"
                 : "Insert ellipse"
           }
           title={
-            !isInserting ? "Rectangle" : isRectangle ? "Rectangle" : "Ellipse"
+            !isInsertingShape
+              ? "Rectangle"
+              : isRectangle
+                ? "Rectangle"
+                : "Ellipse"
           }
         >
-          {/* Default option */}
-          {!isInserting && <RectangleHorizontal className="size-5" />}
-          {isInserting && isRectangle && (
+          {/* Default shape: rectangle */}
+          {!isInsertingShape && <RectangleHorizontal className="size-5" />}
+          {isInsertingShape && isRectangle && (
             <RectangleHorizontal className="size-5" />
           )}
-          {isInserting && isEllipse && <Ellipse className="size-5" />}
+          {isInsertingShape && isEllipse && <Ellipse className="size-5" />}
         </IconButton>
 
         {/* Menu toggler button */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Click to toggle shapes menu"
-          title="Toggle shapes menu"
+          aria-label={`Click to ${isOpen ? "close" : "open"} shapes menu`}
+          title={`${isOpen ? "Close" : "Open"} shapes menu`}
         >
           {isOpen ? (
             <ChevronDown className="size-3" />
@@ -87,7 +96,7 @@ const ShapeSelectButton = memo(
           )}
         </button>
 
-        {/* Selection menu */}
+        {/* Shapes selection menu */}
         {isOpen && (
           <div className="absolute -top-20 min-w-37.5 rounded-xl bg-[#f5f5f5] p-2 text-gray-900 shadow-lg">
             <button
