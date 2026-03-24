@@ -5,26 +5,31 @@ import { colorObjToHex } from "~/lib/utils";
 const getHexColor = (colorObj: Color) =>
   colorObj ? colorObjToHex(colorObj) : "#ccc";
 
-const Rectangle = memo(
-  ({ id, layer }: { id: string; layer: RectangleLayer }) => {
-    const { x, y, width, height, fill, stroke, opacity, cornerRadius } = layer;
+interface RectangleProps {
+  id: string;
+  layer: RectangleLayer;
+  onLayerPointerDown: (layerId: string, event: React.PointerEvent) => void;
+}
 
-    return (
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill={getHexColor(fill)}
-        strokeWidth={1}
-        stroke={getHexColor(stroke)}
-        opacity={opacity}
-        rx={cornerRadius ?? 0}
-        ry={cornerRadius ?? 0}
-      />
-    );
-  },
-);
+const Rectangle = memo(({ id, layer, onLayerPointerDown }: RectangleProps) => {
+  const { x, y, width, height, fill, stroke, opacity, cornerRadius } = layer;
+
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={getHexColor(fill)}
+      strokeWidth={1}
+      stroke={getHexColor(stroke)}
+      opacity={opacity}
+      rx={cornerRadius ?? 0}
+      ry={cornerRadius ?? 0}
+      onPointerDown={(event) => onLayerPointerDown(id, event)}
+    />
+  );
+});
 
 Rectangle.displayName = "Rectangle";
 
