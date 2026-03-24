@@ -20,7 +20,7 @@ const H = RESIZE_HANDLE_SIZE;
 // ---------------------------------------------------------------------------
 type HandleConfig = {
   cursor: string;
-  side: number; // Side bitmask (e.g. Side.TOP | Side.LEFT for the top-left corner)
+  handle: number; // Resize handle bitmask (e.g. Side.TOP | Side.LEFT for the top-left corner)
   getX: (x: number, y: number, w: number, h: number) => number;
   getY: (x: number, y: number, w: number, h: number) => number;
 };
@@ -29,50 +29,50 @@ const HANDLE_CONFIGS: HandleConfig[] = [
   // Corners
   {
     cursor: "nw-resize",
-    side: ResizeHandle.TOP + ResizeHandle.LEFT,
+    handle: ResizeHandle.TOP + ResizeHandle.LEFT,
     getX: (x) => x - H / 2,
     getY: (_x, y) => y - H / 2,
   },
   {
     cursor: "ne-resize",
-    side: ResizeHandle.TOP + ResizeHandle.RIGHT,
+    handle: ResizeHandle.TOP + ResizeHandle.RIGHT,
     getX: (x, _y, w) => x + w - H / 2,
     getY: (_x, y) => y - H / 2,
   },
   {
     cursor: "sw-resize",
-    side: ResizeHandle.BOTTOM + ResizeHandle.LEFT,
+    handle: ResizeHandle.BOTTOM + ResizeHandle.LEFT,
     getX: (x) => x - H / 2,
     getY: (_x, y, _w, h) => y + h - H / 2,
   },
   {
     cursor: "se-resize",
-    side: ResizeHandle.BOTTOM + ResizeHandle.RIGHT,
+    handle: ResizeHandle.BOTTOM + ResizeHandle.RIGHT,
     getX: (x, _y, w) => x + w - H / 2,
     getY: (_x, y, _w, h) => y + h - H / 2,
   },
   // Edge midpoints
   {
     cursor: "ns-resize",
-    side: ResizeHandle.TOP,
+    handle: ResizeHandle.TOP,
     getX: (x, _y, w) => x + w / 2 - H / 2,
     getY: (_x, y) => y - H / 2,
   },
   {
     cursor: "ns-resize",
-    side: ResizeHandle.BOTTOM,
+    handle: ResizeHandle.BOTTOM,
     getX: (x, _y, w) => x + w / 2 - H / 2,
     getY: (_x, y, _w, h) => y + h - H / 2,
   },
   {
     cursor: "ew-resize",
-    side: ResizeHandle.LEFT,
+    handle: ResizeHandle.LEFT,
     getX: (x) => x - H / 2,
     getY: (_x, y, _w, h) => y + h / 2 - H / 2,
   },
   {
     cursor: "ew-resize",
-    side: ResizeHandle.RIGHT,
+    handle: ResizeHandle.RIGHT,
     getX: (x, _y, w) => x + w - H / 2,
     getY: (_x, y, _w, h) => y + h / 2 - H / 2,
   },
@@ -107,7 +107,7 @@ const SelectionBox = memo(
 
       return HANDLE_CONFIGS.map((cfg) => ({
         cursor: cfg.cursor,
-        side: cfg.side,
+        side: cfg.handle,
         tx: cfg.getX(x, y, width, height),
         ty: cfg.getY(x, y, width, height),
       }));
