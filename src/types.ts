@@ -93,7 +93,7 @@ export type Box = {
   height: number;
 };
 
-// Bitmask flags (each side is a power of 2 => they occupy exactly one bit in binary!)
+// Bitmask flags (each side is a power of 2 => they occupy exactly one unique bit in binary!)
 export enum ResizeHandle {
   TOP = 1, // 0001 in binary
   BOTTOM = 2, // 0010 in binary
