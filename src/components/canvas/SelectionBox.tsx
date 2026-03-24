@@ -142,7 +142,7 @@ const SelectionBox = memo(
           width={textWidth + TEXT_BOX_PADDING}
           height={20}
           rx={4}
-          className="fill-[#0b99ff]"
+          className="pointer-events-none fill-[#0b99ff]"
         />
 
         {/* Dimension label text (e.g. "200x100") */}
