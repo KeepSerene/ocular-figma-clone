@@ -82,6 +82,23 @@ export enum CanvasMode {
   INSERTING, // for inserting a layer on the canvas
   DRAGGING, // for dragging a layer on the canvas
   PENCIL, // for free-hand drawing
+  RESIZING, // for resizing selected layers
+  TRANSLATING, // for selecting layers, moving them around, and/or resizing them
+}
+
+export type Box = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+// Bitmask flags (each side is a power of 2 => they occupy exactly one bit in binary!)
+export enum ResizeHandle {
+  TOP = 1, // 0001 in binary
+  BOTTOM = 2, // 0010 in binary
+  LEFT = 4, // 0100 in binary
+  RIGHT = 8, // 1000 in binary
 }
 
 export type CanvasState =
@@ -98,4 +115,13 @@ export type CanvasState =
     }
   | {
       mode: CanvasMode.PENCIL;
+    }
+  | {
+      mode: CanvasMode.RESIZING;
+      handle: ResizeHandle;
+      initialBounds: Box;
+    }
+  | {
+      mode: CanvasMode.TRANSLATING;
+      cursorPos: Point;
     };

@@ -1,5 +1,7 @@
 import {
   LayerType,
+  ResizeHandle,
+  type Box,
   type Camera,
   type Color,
   type PathLayer,
@@ -149,4 +151,70 @@ export function getSvgPathFromStroke(stroke: number[][]): string {
   d.push("Z");
 
   return d.join(" ");
+}
+
+/**
+ * Computes the new bounding box for a layer being resized by dragging one of its
+ * handles to `point`.
+ *
+ * Each handle is identified by a `ResizeHandle` bitmask so that corners (e.g. TOP | LEFT)
+ * and edge-midpoints (e.g. TOP alone) are expressed uniformly. The function tests
+ * each bit independently, which means corner handles naturally move two edges at once.
+ *
+ * The opposite edge from whichever side is being dragged always stays anchored to
+ * its position in `initialBounds` — the snapshot taken the moment the pointer went
+ * down on the handle. Flipping (dragging past the opposite edge) is supported: the
+ * box simply re-orients so `x`/`y` always represent the top-left corner and
+ * `width`/`height` are always non-negative.
+ *
+ * @param initialBounds - The layer's bounding box at the start of the resize gesture.
+ * @param handle  - A `ResizeHandle` bitmask identifying which handle is being dragged.
+ * @param cursorPos       - The current pointer position in canvas space.
+ * @returns               The new bounding box with the dragged edge(s) moved to `point`.
+ */
+export function resizeBounds(
+  initialBounds: Box,
+  handle: ResizeHandle,
+  cursorPos: Point,
+): Box {
+  // Start from the initial snapshot — we'll selectively override only the edges
+  // that belong to the handle being dragged, leaving all other edges untouched.
+  let { x, y, width, height } = initialBounds;
+
+  // Pre-compute the fixed opposite edges before we mutate x/y/width/height below.
+  // These are the edges that stay anchored while the pointer drags the other side.
+  const right = initialBounds.x + initialBounds.width; // fixed anchor when dragging LEFT
+  const bottom = initialBounds.y + initialBounds.height; // fixed anchor when dragging TOP
+
+  // --- TOP edge ---
+  // The bottom edge stays anchored at `bottom`; the top follows the pointer.
+  // Math.min keeps y ≤ bottom even after a flip (pointer dragged past the bottom edge).
+  // Math.abs gives a non-negative height regardless of drag direction.
+  if (handle & ResizeHandle.TOP) {
+    y = Math.min(cursorPos.y, bottom);
+    height = Math.abs(bottom - cursorPos.y);
+  }
+
+  // --- BOTTOM edge ---
+  // The top edge stays anchored at `initialBounds.y`; the bottom follows the pointer.
+  if (handle & ResizeHandle.BOTTOM) {
+    y = Math.min(cursorPos.y, initialBounds.y);
+    height = Math.abs(cursorPos.y - initialBounds.y);
+  }
+
+  // --- LEFT edge ---
+  // The right edge stays anchored at `right`; the left follows the pointer.
+  if (handle & ResizeHandle.LEFT) {
+    x = Math.min(cursorPos.x, right);
+    width = Math.abs(right - cursorPos.x);
+  }
+
+  // --- RIGHT edge ---
+  // The left edge stays anchored at `initialBounds.x`; the right follows the pointer.
+  if (handle & ResizeHandle.RIGHT) {
+    x = Math.min(cursorPos.x, initialBounds.x);
+    width = Math.abs(cursorPos.x - initialBounds.x);
+  }
+
+  return { x, y, width, height };
 }

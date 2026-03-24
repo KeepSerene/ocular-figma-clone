@@ -1,16 +1,24 @@
 "use client";
 
-import { useMutation, useSelf, useStorage } from "@liveblocks/react";
+import {
+  useMutation,
+  useMyPresence,
+  useSelf,
+  useStorage,
+} from "@liveblocks/react";
 import { useCallback, useMemo, useState } from "react";
 import {
   pencilDraftToPathLayer,
   colorObjToHex,
   screenToCanvas,
+  resizeBounds,
 } from "~/lib/utils";
 import CustomLayer from "./CustomLayer";
 import {
   CanvasMode,
   LayerType,
+  ResizeHandle,
+  type Box,
   type Camera,
   type CanvasState,
   type Color,
@@ -24,6 +32,7 @@ import { LiveObject } from "@liveblocks/client";
 import type { LiveLayer } from "liveblocks.config";
 import Toolbar from "../toolbar/Toolbar";
 import Path from "./Path";
+import SelectionBox from "./SelectionBox";
 
 const MAX_LAYERS = 100;
 const ON_CANVAS_DEFAULT_COLOR = { r: 217, g: 217, b: 217 } as Color;
@@ -32,6 +41,7 @@ function Canvas() {
   const canvasColor = useStorage((root) => root.canvasColor);
   const layerIds = useStorage((root) => root.layerIds);
   const pencilDraft = useSelf((me) => me.presence.pencilDraft);
+  const [myPresence, updateMyPresence] = useMyPresence();
 
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 });
   const [canvasState, setCanvasState] = useState<CanvasState>({
@@ -177,6 +187,37 @@ function Canvas() {
     [canvasState.mode],
   );
 
+  const resizeSelectedLayer = useMutation(
+    ({ self, storage }, point: Point) => {
+      if (canvasState.mode !== CanvasMode.RESIZING) {
+        return;
+      }
+
+      const bounds = resizeBounds(
+        canvasState.initialBounds,
+        canvasState.handle,
+        point,
+      );
+
+      // Apply the new bounds to whichever layer is currently selected.
+      // Only one layer is selectable at a time for now!
+      const liveLayers = storage.get("layers");
+      const selectedLayerId = self.presence.selections[0];
+
+      if (!selectedLayerId) return;
+
+      const layer = liveLayers.get(selectedLayerId);
+
+      if (!layer) return;
+
+      // Liveblocks LiveObject.update() does a partial merge, so passing the full
+      // Box (x, y, width, height) is safe — it won't overwrite unrelated fields
+      // like fill, stroke, opacity, etc.
+      layer.update(bounds);
+    },
+    [canvasState, resizeBounds],
+  );
+
   const handlePointerDown = useMutation(
     ({}, event: React.PointerEvent) => {
       // Get the point where user clicked
@@ -197,8 +238,7 @@ function Canvas() {
       // Get the point where user clicked
       const point = screenToCanvas(event, camera);
 
-      // If the canvas is in dragging mode and user actually clicked on the canvas
-      // to set a dragging origin
+      // If the canvas is in dragging mode and user actually clicked on the canvas to set a dragging origin
       if (
         canvasState.mode === CanvasMode.DRAGGING &&
         canvasState.origin !== null
@@ -210,9 +250,11 @@ function Canvas() {
         }));
       } else if (canvasState.mode === CanvasMode.PENCIL) {
         continueDrawing(point, event);
+      } else if (canvasState.mode === CanvasMode.RESIZING) {
+        resizeSelectedLayer(point);
       }
     },
-    [canvasState, setCamera, continueDrawing],
+    [canvasState, setCamera, continueDrawing, resizeSelectedLayer],
   );
 
   const handlePointerUp = useMutation(
@@ -252,6 +294,37 @@ function Canvas() {
     [setCamera],
   );
 
+  // Select a layer when user clicks it
+  const handleLayerPointerDown = useMutation(
+    ({ self, setMyPresence }, layerId: string, event: React.PointerEvent) => {
+      if (
+        canvasState.mode === CanvasMode.INSERTING ||
+        canvasState.mode === CanvasMode.PENCIL
+      ) {
+        return;
+      }
+
+      event.stopPropagation();
+
+      if (!self.presence.selections.includes(layerId)) {
+        setMyPresence({ selections: [layerId] });
+      }
+    },
+    [canvasState.mode],
+  );
+
+  // Resize selected layers when user clicks on resize handles
+  const handleResizeHandlePointerDown = useCallback(
+    (handle: ResizeHandle, initialBounds: Box) => {
+      setCanvasState({
+        mode: CanvasMode.RESIZING,
+        handle,
+        initialBounds,
+      });
+    },
+    [setCanvasState],
+  );
+
   return (
     <div className="flex h-dvh w-full">
       <main className="fixed inset-0 h-dvh overflow-y-auto">
@@ -272,7 +345,11 @@ function Canvas() {
               }}
             >
               {layerIds?.map((id) => (
-                <CustomLayer key={id} id={id} />
+                <CustomLayer
+                  key={id}
+                  id={id}
+                  onLayerPointerDown={handleLayerPointerDown}
+                />
               ))}
 
               {/* Live preview: pencilDraft points are already in absolute canvas space,
@@ -288,6 +365,10 @@ function Canvas() {
                   opacity={1}
                 />
               )}
+
+              <SelectionBox
+                onResizeHandlePointerDown={handleResizeHandlePointerDown}
+              />
             </g>
           </svg>
         </div>

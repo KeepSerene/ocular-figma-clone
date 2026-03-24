@@ -8,7 +8,13 @@ import { useMutation } from "@liveblocks/react";
 const getHexColor = (colorObj: Color) =>
   colorObj ? colorObjToHex(colorObj) : "#ccc";
 
-const Text = memo(({ id, layer }: { id: string; layer: TextLayer }) => {
+interface TextProps {
+  id: string;
+  layer: TextLayer;
+  onLayerPointerDown: (layerId: string, event: React.PointerEvent) => void;
+}
+
+const Text = memo(({ id, layer, onLayerPointerDown }: TextProps) => {
   const {
     x,
     y,
@@ -115,6 +121,7 @@ const Text = memo(({ id, layer }: { id: string; layer: TextLayer }) => {
           fill={getHexColor(fill)}
           stroke={getHexColor(stroke)}
           opacity={opacity}
+          onPointerDown={(event) => onLayerPointerDown(id, event)}
         >
           {text}
         </text>

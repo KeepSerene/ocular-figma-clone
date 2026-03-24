@@ -5,7 +5,13 @@ import { colorObjToHex } from "~/lib/utils";
 const getHexColor = (colorObj: Color) =>
   colorObj ? colorObjToHex(colorObj) : "#ccc";
 
-const Ellipse = memo(({ id, layer }: { id: string; layer: EllipseLayer }) => {
+interface EllipseProps {
+  id: string;
+  layer: EllipseLayer;
+  onLayerPointerDown: (layerId: string, event: React.PointerEvent) => void;
+}
+
+const Ellipse = memo(({ id, layer, onLayerPointerDown }: EllipseProps) => {
   const { x, y, width, height, fill, stroke, opacity } = layer;
 
   return (
@@ -18,6 +24,7 @@ const Ellipse = memo(({ id, layer }: { id: string; layer: EllipseLayer }) => {
       fill={getHexColor(fill)}
       stroke={getHexColor(stroke)}
       opacity={opacity}
+      onPointerDown={(event) => onLayerPointerDown(id, event)}
     />
   );
 });
