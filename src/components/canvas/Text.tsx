@@ -81,7 +81,7 @@ const Text = memo(({ id, layer, onLayerPointerDown }: TextProps) => {
   }, [isEditing]);
 
   return (
-    <g onDoubleClick={handleDoubleClick}>
+    <g onDoubleClick={handleDoubleClick} className="group">
       {isEditing ? (
         <foreignObject x={x} y={y} width={width} height={height}>
           <input
@@ -106,25 +106,40 @@ const Text = memo(({ id, layer, onLayerPointerDown }: TextProps) => {
           />
         </foreignObject>
       ) : (
-        <text
-          x={x}
-          y={y + fontSize}
-          width={width}
-          height={height}
-          fontFamily={
-            fontFamily === "Inter"
-              ? "var(--font-inter), Inter, sans-serif"
-              : fontFamily
-          }
-          fontSize={fontSize}
-          fontWeight={fontWeight}
-          fill={getHexColor(fill)}
-          stroke={getHexColor(stroke)}
-          opacity={opacity}
-          onPointerDown={(event) => onLayerPointerDown(id, event)}
-        >
-          {text}
-        </text>
+        <>
+          {/* Hover border */}
+          <rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill="none"
+            stroke="#0b99ff"
+            strokeWidth={2}
+            className="pointer-events-none opacity-0 group-hover:opacity-100"
+          />
+
+          {/* Main text */}
+          <text
+            x={x}
+            y={y + fontSize}
+            width={width}
+            height={height}
+            fontFamily={
+              fontFamily === "Inter"
+                ? "var(--font-inter), Inter, sans-serif"
+                : fontFamily
+            }
+            fontSize={fontSize}
+            fontWeight={fontWeight}
+            fill={getHexColor(fill)}
+            stroke={getHexColor(stroke)}
+            opacity={opacity}
+            onPointerDown={(event) => onLayerPointerDown(id, event)}
+          >
+            {text}
+          </text>
+        </>
       )}
     </g>
   );

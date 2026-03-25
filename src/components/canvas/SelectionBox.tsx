@@ -3,6 +3,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useSelf, useStorage } from "@liveblocks/react";
 import { LayerType, ResizeHandle, type Box } from "~/types";
+import useSelectionBoxBounds from "~/hooks/useSelectionBoxBounds";
 
 interface SelectionBoxProps {
   onResizeHandlePointerDown: (handle: ResizeHandle, initialBounds: Box) => void;
@@ -15,7 +16,7 @@ const H = RESIZE_HANDLE_SIZE;
 // ---------------------------------------------------------------------------
 // Resize handle configuration table
 // Each entry describes one of the 8 handles around the selection box.
-// `side` is the Side bitmask passed to onResizeHandlePointerDown.
+// `handle` is the ResizeHandle bitmask passed to onResizeHandlePointerDown.
 // `getX` / `getY` compute the handle's transform origin given the selected layer.
 // ---------------------------------------------------------------------------
 type HandleConfig = {
@@ -86,9 +87,15 @@ const SelectionBox = memo(
     const selectedLayerId = useSelf((me) =>
       me.presence.selections.length === 1 ? me.presence.selections[0] : null,
     );
-    const layers = useStorage((root) => root.layers);
+    // Resize is not supported for path layers — their shape comes from freehand
+    // points, not a simple bounding box, so a box-resize would be misleading!!
+    const shouldResize = useStorage(
+      (root) =>
+        selectedLayerId &&
+        root.layers.get(selectedLayerId)?.type !== LayerType.PATH,
+    );
 
-    const selectedLayer = selectedLayerId ? layers?.get(selectedLayerId) : null;
+    const bounds = useSelectionBoxBounds();
 
     // Set svg text box width
     useEffect(() => {
@@ -96,14 +103,14 @@ const SelectionBox = memo(
         const bBox = textRef.current.getBBox();
         setTextWidth(bBox.width);
       }
-    }, [selectedLayer]);
+    }, [bounds]);
 
     // Pre-compute each handle's pixel position so the JSX below stays clean
     // Recalculates only when the selected layer's geometry changes
     const handles = useMemo(() => {
-      if (!selectedLayer || selectedLayer.type === LayerType.PATH) return [];
+      if (!bounds) return [];
 
-      const { x, y, width, height } = selectedLayer;
+      const { x, y, width, height } = bounds;
 
       return HANDLE_CONFIGS.map((cfg) => ({
         cursor: cfg.cursor,
@@ -111,34 +118,26 @@ const SelectionBox = memo(
         tx: cfg.getX(x, y, width, height),
         ty: cfg.getY(x, y, width, height),
       }));
-    }, [selectedLayer]);
+    }, [bounds]);
 
-    if (!selectedLayer) return null;
-
-    // Resize is not supported for path layers — their shape comes from freehand
-    // points, not a simple bounding box, so a box-resize would be misleading!!
-    const shouldResize = selectedLayer.type !== LayerType.PATH;
+    if (!bounds) return null;
 
     return (
       <>
         {/* Selection outline */}
         <rect
-          width={selectedLayer.width}
-          height={selectedLayer.height}
+          width={bounds.width}
+          height={bounds.height}
           style={{
-            transform: `translate(${selectedLayer.x}px,${selectedLayer.y}px)`,
+            transform: `translate(${bounds.x}px,${bounds.y}px)`,
           }}
           className="pointer-events-none fill-transparent stroke-[#0b99ff] stroke-[1px]"
         />
 
         {/* Dimension label background pill */}
         <rect
-          x={
-            selectedLayer.x +
-            selectedLayer.width / 2 -
-            (textWidth + TEXT_BOX_PADDING) / 2
-          }
-          y={selectedLayer.y + selectedLayer.height + 10}
+          x={bounds.x + bounds.width / 2 - (textWidth + TEXT_BOX_PADDING) / 2}
+          y={bounds.y + bounds.height + 10}
           width={textWidth + TEXT_BOX_PADDING}
           height={20}
           rx={4}
@@ -150,11 +149,11 @@ const SelectionBox = memo(
           ref={textRef}
           textAnchor="middle"
           style={{
-            transform: `translate(${selectedLayer.x + selectedLayer.width / 2}px,${selectedLayer.y + selectedLayer.height + 23}px)`,
+            transform: `translate(${bounds.x + bounds.width / 2}px,${bounds.y + bounds.height + 23}px)`,
           }}
           className="pointer-events-none fill-white text-[11px]"
         >
-          {Math.round(selectedLayer.width)}x{Math.round(selectedLayer.height)}
+          {Math.round(bounds.width)}x{Math.round(bounds.height)}
         </text>
 
         {/* Resize handles */}
@@ -165,7 +164,7 @@ const SelectionBox = memo(
               cursor={cursor}
               onPointerDown={(event) => {
                 event.stopPropagation();
-                onResizeHandlePointerDown(side, selectedLayer);
+                onResizeHandlePointerDown(side, bounds);
               }}
               style={{
                 width: RESIZE_HANDLE_SIZE,
