@@ -22,6 +22,8 @@ const Rectangle = memo(({ id, layer, onLayerPointerDown }: RectangleProps) => {
         y={y}
         width={width}
         height={height}
+        rx={cornerRadius ?? 0}
+        ry={cornerRadius ?? 0}
         fill="none"
         stroke="#0b99ff"
         strokeWidth={4}
