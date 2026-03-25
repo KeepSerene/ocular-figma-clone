@@ -4,61 +4,66 @@ import { memo } from "react";
 import type { Camera } from "~/types";
 import useSelectionBoxBounds from "~/hooks/useSelectionBoxBounds";
 import { BringToFront, SendToBack } from "lucide-react";
-import { useMutation, useSelf } from "@liveblocks/react";
+import { useMutation } from "@liveblocks/react";
 
 const LayerContextMenu = memo(({ camera }: { camera: Camera }) => {
   const bounds = useSelectionBoxBounds(); // for positioning the context menu relative to the selection box
-  // We need the selection IDs to know what to move
-  const selections = useSelf((me) => me.presence.selections);
 
-  if (!bounds || !selections) return null;
+  if (!bounds) return null;
 
-  const x = bounds.x + bounds.width / 2 + camera.x;
-  const y = bounds.y + camera.y;
+  // Canvas space point -> screen space point (see screenToCanvas() in utils.ts)
+  const x = (bounds.x + bounds.width / 2) * camera.zoom + camera.x;
+  const y = bounds.y * camera.zoom + camera.y;
 
   /*
    * In Liveblocks, the rendering order is determined by the order of IDs in our LiveList (layerIds).
    * The last item in the list is rendered "on top."
    */
 
-  const bringToFront = useMutation(
-    ({ storage }) => {
-      const liveLayerIds = storage.get("layerIds");
-      const indices: number[] = [];
+  const bringToFront = useMutation(({ self, storage }) => {
+    const selections = self.presence.selections; // we need the selection IDs to know what to move
 
-      // Find current indices of selected layers
-      for (let i = 0; i < liveLayerIds.length; i++) {
-        if (selections.includes(liveLayerIds.get(i)!)) {
-          indices.push(i);
-        }
+    if (!selections) return;
+
+    const liveLayerIds = storage.get("layerIds");
+    const indices: number[] = [];
+
+    // Find current indices of selected layers
+    for (let i = 0; i < liveLayerIds.length; i++) {
+      if (selections.includes(liveLayerIds.get(i)!)) {
+        indices.push(i);
       }
+    }
 
-      // Move to front: Iterate backwards to maintain relative order at the end of the list
-      for (let i = indices.length - 1; i >= 0; i--) {
-        liveLayerIds.move(indices[i]!, liveLayerIds.length - 1);
+    // Move to front: Iterate backwards and move to target index
+    for (
+      let i = indices.length - 1, target = liveLayerIds.length - 1;
+      i >= 0;
+      i--, target--
+    ) {
+      liveLayerIds.move(indices[i]!, target);
+    }
+  }, []);
+
+  const sendToBack = useMutation(({ self, storage }) => {
+    const selections = self.presence.selections; // we need the selection IDs to know what to move
+
+    if (!selections) return;
+
+    const liveLayerIds = storage.get("layerIds");
+    const indices: number[] = [];
+
+    for (let i = 0; i < liveLayerIds.length; i++) {
+      if (selections.includes(liveLayerIds.get(i)!)) {
+        indices.push(i);
       }
-    },
-    [selections],
-  );
+    }
 
-  const sendToBack = useMutation(
-    ({ storage }) => {
-      const liveLayerIds = storage.get("layerIds");
-      const indices: number[] = [];
-
-      for (let i = 0; i < liveLayerIds.length; i++) {
-        if (selections.includes(liveLayerIds.get(i)!)) {
-          indices.push(i);
-        }
-      }
-
-      // Move to back: Iterate forwards and move to index 0
-      for (let i = 0; i < indices.length; i++) {
-        liveLayerIds.move(indices[i]!, 0);
-      }
-    },
-    [selections],
-  );
+    // Move to back: Iterate forwards and move to index target index
+    for (let i = 0, target = 0; i < indices.length; i++, target++) {
+      liveLayerIds.move(indices[i]!, target);
+    }
+  }, []);
 
   return (
     <div

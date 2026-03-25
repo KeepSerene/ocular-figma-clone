@@ -419,7 +419,14 @@ function Canvas() {
 
   const handlePointerUp = useMutation(
     ({}, event: React.PointerEvent) => {
-      if (canvasState.mode === CanvasMode.RIGHT_CLICK) return;
+      if (canvasState.mode === CanvasMode.RIGHT_CLICK) {
+        /*
+         * `handleLayerPointerDown()` calls `history.pause()` before entering this mode.
+         * Without resuming, subsequent mutations become part of the paused batch instead of creating separate undo steps.
+         */
+        history.resume();
+        return;
+      }
 
       // Guard: Liveblocks storage not loaded yet
       if (layerIds === null || layerIds === undefined) return;
@@ -576,10 +583,13 @@ function Canvas() {
         // lowercasing event.key to handle both uppercase and lowercase key presses
         // e.g. undo is Ctrl + z while redo is Ctrl + Shift + Z
         case "backspace":
+          event.preventDefault();
           deleteLayers();
           break;
         case "z":
           if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+
             if (event.shiftKey) {
               history.redo();
             } else {
@@ -589,6 +599,7 @@ function Canvas() {
           break;
         case "a":
           if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
             selectAllLayers();
           }
           break;
