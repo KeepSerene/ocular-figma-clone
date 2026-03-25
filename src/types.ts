@@ -82,8 +82,11 @@ export enum CanvasMode {
   INSERTING, // for inserting a layer on the canvas
   DRAGGING, // for dragging a layer on the canvas
   PENCIL, // for free-hand drawing
-  RESIZING, // for resizing selected layers
+  RESIZING, // for selecting & resizing layers
   TRANSLATING, // for selecting layers, moving them around, and/or resizing them
+  SELECTION_NET, // for selecting every layer inside the net
+  PRESSING, // for deselecting every selected layer (simply pressing down on the canvas)
+  // PRESSING helps us determine if user wants to deselect every selected layer or they want to trigger a selection-net
 }
 
 export type Box = {
@@ -124,4 +127,13 @@ export type CanvasState =
   | {
       mode: CanvasMode.TRANSLATING;
       cursorPos: Point;
+    }
+  | {
+      mode: CanvasMode.SELECTION_NET;
+      initialCursorPos: Point;
+      currentCursorPos?: Point;
+    }
+  | {
+      mode: CanvasMode.PRESSING;
+      origin: Point;
     };

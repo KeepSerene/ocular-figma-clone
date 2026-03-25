@@ -1,3 +1,4 @@
+import type { LiveLayer } from "liveblocks.config";
 import {
   LayerType,
   ResizeHandle,
@@ -217,4 +218,87 @@ export function resizeBounds(
   }
 
   return { x, y, width, height };
+}
+
+/**
+ * Finds all layer IDs whose axis-aligned bounding boxes (AABBs) intersect with
+ * the selection net rectangle currently being drawn by the user.
+ *
+ * The selection rectangle is defined by two canvas-space points — the position
+ * where the pointer went down (`initialCursorPos`) and where it currently is
+ * (`currentCursorPos`). Because the user can drag in any direction (left-to-right,
+ * right-to-left, top-to-bottom, or diagonally), the function normalises the rect
+ * before testing so `x`/`y` always represent the top-left corner.
+ *
+ * **Intersection semantics**: A layer is included if its bounding box overlaps the
+ * selection rect by even a single pixel — i.e. "touch-select" behaviour, identical
+ * to Figma's default marquee select. Two AABBs A and B do NOT intersect only when
+ * one is entirely to the left, right, above, or below the other.
+ *
+ * Note on PATH layers: path layers store their bounding box as `x, y, width, height`
+ * just like every other layer, so the same AABB test works correctly for them even
+ * though their visual shape may not fill the entire box.
+ *
+ * @param layerIds          - Ordered list of all layer IDs on the canvas
+ *
+ * @param layers            - Immutable snapshot of the layers map
+ *
+ * @param initialCursorPos  - Canvas-space point where the selection net started
+ *
+ * @param currentCursorPos  - Canvas-space point where the pointer currently sits
+ *
+ * @returns An array of layer IDs that intersect the selection rectangle, preserving
+ *          the original z-order from `layerIds`. Returns `[]` if nothing intersects.
+ */
+export function findIntersectingLayerIdsWithRect(
+  layerIds: readonly string[],
+  layers: ReadonlyMap<string, Readonly<LiveLayer>>,
+  initialCursorPos: Point,
+  currentCursorPos: Point,
+): string[] {
+  // --- 1. Normalise the selection rect ---
+  // The user can drag in any direction, so we can't assume initialCursorPos is
+  // the top-left corner. Math.min/abs gives us a canonical axis-aligned rect
+  // regardless of drag direction.
+  const selLeft = Math.min(initialCursorPos.x, currentCursorPos.x);
+  const selTop = Math.min(initialCursorPos.y, currentCursorPos.y);
+  const selRight = Math.max(initialCursorPos.x, currentCursorPos.x);
+  const selBottom = Math.max(initialCursorPos.y, currentCursorPos.y);
+
+  const intersectingLayerIds: string[] = [];
+
+  // --- 2. AABB intersection test for each layer ---
+  for (const layerId of layerIds) {
+    const layer = layers.get(layerId);
+
+    // Skip layers that no longer exist in storage
+    if (!layer) continue;
+
+    const layerLeft = layer.x;
+    const layerTop = layer.y;
+    const layerRight = layer.x + layer.width;
+    const layerBottom = layer.y + layer.height;
+
+    // Two AABBs do NOT intersect when one is fully outside the other on any axis.
+    // Negating all four non-intersect conditions gives us the intersect condition.
+    //
+    //  Non-intersect cases:
+    //    layer is entirely LEFT  of selection: layerRight  < selLeft
+    //    layer is entirely RIGHT of selection: layerLeft   > selRight
+    //    layer is entirely ABOVE selection:    layerBottom < selTop
+    //    layer is entirely BELOW selection:    layerTop    > selBottom
+    //
+    // If none of these are true => the AABBs overlap => include the layer.
+    const doesNotIntersect =
+      layerRight < selLeft ||
+      layerLeft > selRight ||
+      layerBottom < selTop ||
+      layerTop > selBottom;
+
+    if (!doesNotIntersect) {
+      intersectingLayerIds.push(layerId);
+    }
+  }
+
+  return intersectingLayerIds;
 }

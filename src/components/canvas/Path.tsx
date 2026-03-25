@@ -30,15 +30,30 @@ const Path = memo(
     // `points` are stored relative to (x, y), so we must translate before drawing.
     // `fill` drives the visible ink color; stroke adds an optional outline.
     return (
-      <path
-        d={pathData}
-        style={{ transform: `translate(${x}px,${y}px)` }}
-        fill={getHexColor(fill)}
-        stroke={getHexColor(stroke)}
-        strokeWidth={1}
-        opacity={opacity}
-        onPointerDown={onPointerDown}
-      />
+      <g className="group">
+        {/* Hover border */}
+        <path
+          d={pathData}
+          style={{ transform: `translate(${x}px,${y}px)` }}
+          fill="none"
+          stroke="#0b99ff"
+          strokeWidth={4}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          className="pointer-events-none opacity-0 group-hover:opacity-100"
+        />
+
+        {/* Main path */}
+        <path
+          d={pathData}
+          style={{ transform: `translate(${x}px,${y}px)` }}
+          fill={getHexColor(fill)}
+          stroke={getHexColor(stroke)}
+          strokeWidth={1}
+          opacity={opacity}
+          onPointerDown={onPointerDown}
+        />
+      </g>
     );
   },
 );
