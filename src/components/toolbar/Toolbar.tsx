@@ -39,7 +39,11 @@ function Toolbar({
         <PointerSelectButton
           isActive={
             canvasState.mode === CanvasMode.MOVING ||
-            canvasState.mode === CanvasMode.DRAGGING
+            canvasState.mode === CanvasMode.PRESSING ||
+            canvasState.mode === CanvasMode.DRAGGING ||
+            canvasState.mode === CanvasMode.SELECTION_NET ||
+            canvasState.mode === CanvasMode.RESIZING ||
+            canvasState.mode === CanvasMode.TRANSLATING
           }
           canvasMode={canvasState.mode}
           onClick={(canvasMode) => {
