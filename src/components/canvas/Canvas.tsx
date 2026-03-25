@@ -8,7 +8,7 @@ import {
   useSelf,
   useStorage,
 } from "@liveblocks/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   pencilDraftToPathLayer,
   colorObjToHex,
@@ -36,6 +36,8 @@ import type { LiveLayer } from "liveblocks.config";
 import Toolbar from "../toolbar/Toolbar";
 import Path from "./Path";
 import SelectionBox from "./SelectionBox";
+import useDeleteLayers from "~/hooks/useDeleteLayers";
+import LayerContextMenu from "./LayerContextMenu";
 
 const MAX_LAYERS = 100;
 const ON_CANVAS_DEFAULT_COLOR = { r: 217, g: 217, b: 217 } as Color;
@@ -47,6 +49,7 @@ function Canvas() {
   const history = useHistory();
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
+  const deleteLayers = useDeleteLayers();
 
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 });
   const [canvasState, setCanvasState] = useState<CanvasState>({
@@ -239,12 +242,6 @@ function Canvas() {
   // Selection helpers
   // ---------------------------------------------------------------------------
 
-  /**
-   * Clears all selected layer IDs from the current user's presence.
-   * Triggered on pointerup when the canvas was in PRESSING or MOVING mode
-   * (i.e. the user clicked on empty canvas without starting a selection net).
-   * Records the deselection in Liveblocks history so Ctrl-Z can undo it.
-   */
   const unselectLayers = useMutation(({ self, setMyPresence }) => {
     if (self.presence.selections.length > 0) {
       setMyPresence({ selections: [] }, { addToHistory: true });
@@ -292,18 +289,6 @@ function Canvas() {
   // Selection net (rubber-band multi-select)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Evaluates whether a PRESSING gesture has moved far enough (> 5 px) to
-   * commit to a selection-net drag. If yes, transitions the canvas from
-   * PRESSING → SELECTION_NET.
-   *
-   * Kept as a plain useCallback (not useMutation) because it only touches
-   * React state, not Liveblocks storage.
-   *
-   * Previously named `handleMultiSelection` — renamed to `startSelectionNet`
-   * to better describe what it actually does: it *starts* the net, not
-   * *handles* the entire multi-selection flow.
-   */
   const startSelectionNet = useCallback(
     (currentCursorPos: Point, origin: Point) => {
       const distanceSquared =
@@ -323,17 +308,6 @@ function Canvas() {
     [setCanvasState],
   );
 
-  /**
-   * Called on every pointermove while in SELECTION_NET mode.
-   * Updates both:
-   *   1. The visual net rect (via canvasState.currentCursorPos) so the SVG
-   *      SelectionNet component redraws correctly.
-   *   2. The user's presence `selections` array with all layer IDs whose
-   *      bounding boxes currently intersect the net rectangle.
-   *
-   * Selections are updated in real-time as the user drags, so layers are
-   * highlighted / de-highlighted immediately.
-   */
   const updateSelectionNet = useMutation(
     ({ setMyPresence, storage }, origin: Point, currentCursorPos: Point) => {
       if (!layerIds) return;
@@ -365,20 +339,6 @@ function Canvas() {
   // Pointer event handlers
   // ---------------------------------------------------------------------------
 
-  /**
-   * Fires when the pointer is pressed on the SVG canvas (not on a layer —
-   * layers stop propagation in handleLayerPointerDown).
-   *
-   * Mode dispatch:
-   *  - DRAGGING   → records the drag origin so pan can begin on pointermove
-   *  - PENCIL     → seeds the pencilDraft with the initial stroke point
-   *  - INSERTING  → intentionally a no-op here; layer insertion is committed
-   *                 on pointerup to avoid accidentally triggering PRESSING →
-   *                 SELECTION_NET if the user moves slightly before releasing
-   *  - Everything else → transitions to PRESSING so the gesture can later
-   *                 resolve to either a deselect (no movement) or a selection
-   *                 net (if the pointer moves > 5 px before being released)
-   */
   const handlePointerDown = useMutation(
     ({}, event: React.PointerEvent) => {
       const point = screenToCanvas(event, camera);
@@ -393,11 +353,11 @@ function Canvas() {
         //
         // Bug scenario (without this guard):
         //   1. User is in INSERTING mode.
-        //   2. pointerdown → falls to `else` → sets PRESSING.
+        //   2. pointerdown -> falls to `else` -> sets PRESSING.
         //   3. React flushes the state update between browser events.
-        //   4. pointermove fires → sees PRESSING → startSelectionNet() is called.
+        //   4. pointermove fires -> sees PRESSING -> startSelectionNet() is called.
         //   5. Canvas enters SELECTION_NET.
-        //   6. pointerup → sees SELECTION_NET → goes to MOVING.
+        //   6. pointerup → sees SELECTION_NET -> goes to MOVING.
         //   7. insertLayer() is NEVER called — shape silently fails to insert.
         //
         // By returning early we keep the mode as INSERTING so that
@@ -406,24 +366,13 @@ function Canvas() {
       } else {
         // Default: user pressed on empty canvas in a neutral mode.
         // Transition to PRESSING — the gesture will be resolved in
-        // handlePointerMove (→ SELECTION_NET) or handlePointerUp (→ deselect).
+        // handlePointerMove (-> SELECTION_NET) or handlePointerUp (-> deselect).
         setCanvasState({ mode: CanvasMode.PRESSING, origin: point });
       }
     },
     [camera, canvasState.mode, setCanvasState, startDrawing],
   );
 
-  /**
-   * Fires continuously while the pointer moves over the SVG canvas.
-   *
-   * Mode dispatch:
-   *  - PRESSING       → try to start a selection net (threshold: 5 px)
-   *  - SELECTION_NET  → expand the net and update intersecting selections
-   *  - DRAGGING       → pan the camera by movementX/Y
-   *  - PENCIL         → append the current point to the pencilDraft
-   *  - RESIZING       → resize the selected layer's bounding box
-   *  - TRANSLATING    → move all selected layers by the pointer delta
-   */
   const handlePointerMove = useMutation(
     ({}, event: React.PointerEvent) => {
       const point = screenToCanvas(event, camera);
@@ -468,22 +417,10 @@ function Canvas() {
     ],
   );
 
-  /**
-   * Fires when the pointer is released anywhere on the SVG canvas.
-   *
-   * This is the "commit" step for most canvas gestures:
-   *  - MOVING / PRESSING  → deselect all layers (clicked empty canvas)
-   *  - INSERTING          → commit the new layer at the pointer position
-   *  - DRAGGING           → stop panning (clear the drag origin)
-   *  - PENCIL             → commit the freehand stroke as a PathLayer
-   *  - SELECTION_NET      → the selections were already set in real-time by
-   *                         updateSelectionNet; just dismiss the net and return
-   *                         to MOVING so the selected layers can be acted on
-   *  - RESIZING           → bounds were already mutated live; return to MOVING
-   *  - TRANSLATING        → positions were already mutated live; return to MOVING
-   */
   const handlePointerUp = useMutation(
     ({}, event: React.PointerEvent) => {
+      if (canvasState.mode === CanvasMode.RIGHT_CLICK) return;
+
       // Guard: Liveblocks storage not loaded yet
       if (layerIds === null || layerIds === undefined) return;
 
@@ -541,10 +478,6 @@ function Canvas() {
   // Camera / zoom
   // ---------------------------------------------------------------------------
 
-  /**
-   * Pans the camera in response to trackpad or mouse-wheel scroll.
-   * deltaX/deltaY are in screen pixels and map directly to camera offset.
-   */
   const handleOnWheel = useCallback(
     (event: React.WheelEvent) => {
       setCamera((prev) => ({
@@ -560,19 +493,6 @@ function Canvas() {
   // Layer-level pointer handlers
   // ---------------------------------------------------------------------------
 
-  /**
-   * Fires when the pointer is pressed on a specific layer element.
-   * Stops propagation so the canvas-level handlePointerDown does NOT also fire.
-   *
-   * - Skips when in INSERTING or PENCIL mode (clicks on layers have no effect
-   *   while those tools are active).
-   * - Selects the clicked layer (if it isn't already selected) and enters
-   *   TRANSLATING mode so subsequent pointermove events move the layer(s).
-   * - When multiple layers are selected (via a previous selection net) and the
-   *   user clicks one of them, we stay in multi-selection and begin translating
-   *   all of them together. Clicking a layer that is NOT in the selection
-   *   replaces the selection with just that layer (Figma default behaviour).
-   */
   const handleLayerPointerDown = useMutation(
     ({ self, setMyPresence }, layerId: string, event: React.PointerEvent) => {
       if (
@@ -590,22 +510,21 @@ function Canvas() {
         // If the user later wants multi-select they can use the selection net.
         setMyPresence({ selections: [layerId] }, { addToHistory: true });
       }
-      // If the layer was already selected (including as part of a multi-select
-      // from a selection net), we do NOT change the selections — all selected
-      // layers will be translated together.
 
-      const point = screenToCanvas(event, camera);
-      setCanvasState({ mode: CanvasMode.TRANSLATING, cursorPos: point });
+      if (event.nativeEvent.buttons === 2) {
+        // Right-click menu mode
+        setCanvasState({ mode: CanvasMode.RIGHT_CLICK });
+      } else {
+        // If the layer was already selected (including as part of a multi-select
+        // from a selection net), we do NOT change the selections — all selected
+        // layers will be translated together.
+        const point = screenToCanvas(event, camera);
+        setCanvasState({ mode: CanvasMode.TRANSLATING, cursorPos: point });
+      }
     },
     [canvasState.mode, history, camera],
   );
 
-  /**
-   * Fires when the pointer is pressed on one of the SelectionBox resize handles.
-   * Snapshots the current layer bounds and enters RESIZING mode.
-   * Pauses Liveblocks history so intermediate resize frames aren't individually
-   * undoable — only the final released position is recorded.
-   */
   const handleResizeHandlePointerDown = useCallback(
     (handle: ResizeHandle, initialBounds: Box) => {
       history.pause();
@@ -617,6 +536,69 @@ function Canvas() {
     },
     [history, setCanvasState],
   );
+
+  // ---------------------------------------------------------------------------
+  // All layers selection
+  // ---------------------------------------------------------------------------
+
+  const selectAllLayers = useMutation(
+    ({ setMyPresence }) => {
+      if (layerIds) {
+        setMyPresence({ selections: [...layerIds] }, { addToHistory: true });
+      }
+    },
+    [layerIds],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Handle keyboard shortcuts
+  // ---------------------------------------------------------------------------
+
+  /*
+   * Backspace: delete selected layers
+   * Ctrl + z: Undo last action
+   * Ctrl + Shift + Z: Redo last action
+   * Ctrl + a: Select all inserted layers
+   */
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      // Check if it's the Text layer input field
+      const isInputField =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA");
+
+      if (isInputField) return;
+
+      switch (event.key.toLowerCase()) {
+        // lowercasing event.key to handle both uppercase and lowercase key presses
+        // e.g. undo is Ctrl + z while redo is Ctrl + Shift + Z
+        case "backspace":
+          deleteLayers();
+          break;
+        case "z":
+          if (event.ctrlKey || event.metaKey) {
+            if (event.shiftKey) {
+              history.redo();
+            } else {
+              history.undo();
+            }
+          }
+          break;
+        case "a":
+          if (event.ctrlKey || event.metaKey) {
+            selectAllLayers();
+          }
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [deleteLayers, history, selectAllLayers]);
 
   return (
     <div className="flex h-dvh w-full">
@@ -631,11 +613,17 @@ function Canvas() {
               : "cursor-default"
           }`}
         >
+          {/* Right-click layer context menu */}
+          {canvasState.mode === CanvasMode.RIGHT_CLICK && (
+            <LayerContextMenu camera={camera} />
+          )}
+
           <svg
             onWheel={handleOnWheel}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onContextMenu={(event) => event.preventDefault()} // stop the default browser menu
             className="size-full"
           >
             {/*

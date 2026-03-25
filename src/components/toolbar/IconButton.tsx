@@ -1,3 +1,5 @@
+"use client";
+
 interface IconButtonProps {
   onClick: () => void;
   children: React.ReactNode;

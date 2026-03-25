@@ -87,6 +87,7 @@ export enum CanvasMode {
   SELECTION_NET, // for selecting every layer inside the net
   PRESSING, // for deselecting every selected layer (simply pressing down on the canvas)
   // PRESSING helps us determine if user wants to deselect every selected layer or they want to trigger a selection-net
+  RIGHT_CLICK, // for right-clicking layers & switching their z-indices
 }
 
 export type Box = {
@@ -136,4 +137,7 @@ export type CanvasState =
   | {
       mode: CanvasMode.PRESSING;
       origin: Point;
+    }
+  | {
+      mode: CanvasMode.RIGHT_CLICK;
     };
