@@ -4,7 +4,7 @@ export default function useDeleteLayers() {
   return useMutation(({ self, storage, setMyPresence }) => {
     const selections = self.presence.selections;
 
-    if (!selections || selections.length === 0) return;
+    if (selections.length === 0) return;
 
     const liveLayers = storage.get("layers");
     const liveLayerIds = storage.get("layerIds");
@@ -21,7 +21,7 @@ export default function useDeleteLayers() {
     });
 
     // Now that we have deleted the selected layers,
-    // update user selections and add it to Liveblocks history
+    // update (reset) user selections and add it to Liveblocks history
     // for undo & redo operations
     setMyPresence({ selections: [] }, { addToHistory: true });
   }, []);

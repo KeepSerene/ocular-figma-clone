@@ -52,7 +52,7 @@ const ShapeSelectButton = memo(
 
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [setIsOpen]);
 
     return (
       <div ref={menuParentRef} className="relative flex items-center gap-1">

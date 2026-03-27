@@ -38,6 +38,8 @@ import Path from "./Path";
 import SelectionBox from "./SelectionBox";
 import useDeleteLayers from "~/hooks/useDeleteLayers";
 import LayerContextMenu from "./LayerContextMenu";
+import Sidebars from "./sidebars/Sidebars";
+import LivePresence from "./LivePresence";
 
 const MAX_LAYERS = 100;
 const ON_CANVAS_DEFAULT_COLOR = { r: 217, g: 217, b: 217 } as Color;
@@ -55,6 +57,7 @@ function Canvas() {
   const [canvasState, setCanvasState] = useState<CanvasState>({
     mode: CanvasMode.MOVING,
   });
+  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
 
   const hexColor = useMemo(() => {
     return canvasColor ? colorObjToHex(canvasColor) : "#1e1e1e";
@@ -195,8 +198,9 @@ function Canvas() {
         return;
       }
 
-      // Append the current canvas-space point and pressure to the draft
+      // Append the current canvas-space point and pressure to the cursor & the draft
       setMyPresence({
+        cursor: currentPoint,
         pencilDraft: [
           ...pencilDraft,
           [currentPoint.x, currentPoint.y, event.pressure],
@@ -374,7 +378,7 @@ function Canvas() {
   );
 
   const handlePointerMove = useMutation(
-    ({}, event: React.PointerEvent) => {
+    ({ setMyPresence }, event: React.PointerEvent) => {
       const point = screenToCanvas(event, camera);
 
       if (canvasState.mode === CanvasMode.PRESSING) {
@@ -404,6 +408,8 @@ function Canvas() {
       } else if (canvasState.mode === CanvasMode.TRANSLATING) {
         translateSelectedLayers(point);
       }
+
+      setMyPresence({ cursor: point });
     },
     [
       camera,
@@ -480,6 +486,10 @@ function Canvas() {
       history,
     ],
   );
+
+  const handlePointerLeave = useMutation(({ setMyPresence }) => {
+    setMyPresence({ cursor: null });
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Camera / zoom
@@ -629,11 +639,13 @@ function Canvas() {
             <LayerContextMenu camera={camera} />
           )}
 
+          {/* Canvas */}
           <svg
             onWheel={handleOnWheel}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerLeave}
             onContextMenu={(event) => event.preventDefault()} // stop the default browser menu
             className="size-full"
           >
@@ -705,6 +717,9 @@ function Canvas() {
                     className="pointer-events-none fill-blue-600/5 stroke-blue-600"
                   />
                 )}
+
+              {/* Live presence */}
+              <LivePresence />
             </g>
           </svg>
         </div>
@@ -725,6 +740,11 @@ function Canvas() {
         zoomOut={() => {
           setCamera((prev) => ({ ...prev, zoom: prev.zoom - 0.1 }));
         }}
+      />
+
+      <Sidebars
+        isLeftCollapsed={isLeftSidebarCollapsed}
+        setIsLeftCollapsed={setIsLeftSidebarCollapsed}
       />
     </div>
   );
