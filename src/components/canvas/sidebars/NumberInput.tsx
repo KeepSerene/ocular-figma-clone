@@ -51,8 +51,8 @@ const NumberInput = memo(
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter") {
-        commitUserInput();
-        (event.currentTarget as HTMLInputElement).blur();
+        event.preventDefault();
+        (event.currentTarget as HTMLInputElement).blur(); // triggers commitUserInput()
       }
     };
 

@@ -10,6 +10,7 @@ import { memo } from "react";
 import Path from "./Path";
 import type { Color } from "~/types";
 
+// To see other users' cursors live
 function Cursors() {
   const othersConnectionIds = useOthersConnectionIds();
 
@@ -26,6 +27,7 @@ const getRgbColorObj = (colorObj: Color | null) => {
   return colorObj ? colorObj : { r: 217, g: 217, b: 217 };
 };
 
+// To see live previews of what other users are drawing
 function Drafts() {
   const othersDrafts = useOthersMapped(
     (other) => ({
@@ -38,7 +40,7 @@ function Drafts() {
   return (
     <>
       {othersDrafts.map(([connectionId, draft]) => {
-        if (!draft.pencilDraft) return null;
+        if (!draft.pencilDraft || draft.pencilDraft.length < 2) return null;
 
         return (
           <Path

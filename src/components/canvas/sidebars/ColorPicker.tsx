@@ -51,8 +51,8 @@ const ColorPicker = memo(({ color, onChange, className }: ColorPickerProps) => {
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
-      commitChange();
-      (event.currentTarget as HTMLInputElement).blur();
+      event.preventDefault();
+      (event.currentTarget as HTMLInputElement).blur(); // triggers commitChange()
     }
   };
 

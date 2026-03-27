@@ -391,7 +391,7 @@ const Sidebars = memo(
                   <ColorPicker
                     color={colorObjToHex(selectedLayer.fill)}
                     onChange={(color) => {
-                      updateLayer({ fill: color, stroke: color });
+                      updateLayer({ fill: color });
                     }}
                   />
                 </div>
