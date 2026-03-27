@@ -302,3 +302,53 @@ export function findIntersectingLayerIdsWithRect(
 
   return intersectingLayerIds;
 }
+
+/**
+ * Converts a hex color string to an RGB Color object.
+ * Supports both 3-digit (#ABC) and 6-digit (#AABBCC) formats.
+ */
+export function hexToRgb(hex: string): Color | undefined {
+  // 1. Remove the hash if it exists
+  const cleanHex = hex.replace(/^#/, "");
+
+  // 2. Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+  const fullHex =
+    cleanHex.length === 3
+      ? cleanHex
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : cleanHex;
+
+  // 3. Validate that we have a valid 6-character hex string
+  const isValid = /^[0-9A-Fa-f]{6}$/.test(fullHex);
+
+  if (!isValid) {
+    console.error(`Invalid hex color: ${hex}`);
+    return;
+  }
+
+  // 4. Parse the r, g, b values
+  return {
+    r: parseInt(fullHex.substring(0, 2), 16),
+    g: parseInt(fullHex.substring(2, 4), 16),
+    b: parseInt(fullHex.substring(4, 6), 16),
+  };
+}
+
+const COLORS = [
+  "#6366F1", // indigo
+  "#8B5CF6", // violet
+  "#EC4899", // pink
+  "#EF4444", // red
+  "#F97316", // orange
+  "#F59E0B", // amber
+  "#10B981", // emerald
+  "#14B8A6", // teal
+  "#06B6D4", // cyan
+  "#3B82F6", // blue
+];
+
+export function connectionIdToColor(connectionId: number): string {
+  return COLORS[connectionId % COLORS.length]!;
+}
