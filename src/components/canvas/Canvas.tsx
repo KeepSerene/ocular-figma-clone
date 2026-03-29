@@ -20,7 +20,7 @@ import CustomLayer from "./CustomLayer";
 import {
   CanvasMode,
   LayerType,
-  ResizeHandle,
+  type ResizeHandle,
   type Box,
   type Camera,
   type CanvasState,
@@ -40,11 +40,18 @@ import useDeleteLayers from "~/hooks/useDeleteLayers";
 import LayerContextMenu from "./LayerContextMenu";
 import Sidebars from "./sidebars/Sidebars";
 import LivePresence from "./LivePresence";
+import type { Invitee } from "~/app/dashboard/designs/[designId]/page";
+
+interface CanvasProps {
+  roomId: string;
+  roomTitle: string;
+  invitees: Invitee[];
+}
 
 const MAX_LAYERS = 100;
 const ON_CANVAS_DEFAULT_COLOR = { r: 217, g: 217, b: 217 } as Color;
 
-function Canvas() {
+function Canvas({ roomId, roomTitle, invitees }: CanvasProps) {
   const canvasColor = useStorage((root) => root.canvasColor);
   const layerIds = useStorage((root) => root.layerIds);
   const pencilDraft = useSelf((me) => me.presence.pencilDraft);
@@ -743,6 +750,9 @@ function Canvas() {
       />
 
       <Sidebars
+        roomId={roomId}
+        roomTitle={roomTitle}
+        invitees={invitees}
         isLeftCollapsed={isLeftSidebarCollapsed}
         setIsLeftCollapsed={setIsLeftSidebarCollapsed}
       />

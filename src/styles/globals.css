@@ -17,6 +17,11 @@
     @apply cursor-not-allowed;
   }
 
+  input,
+  textarea {
+    @apply caret-blue-500;
+  }
+
   /* Remove the up & down arrows in input type number */
   /* For WebKit browsers */
   input[type="number"]::-webkit-inner-spin-button,
@@ -29,6 +34,7 @@
   /* For Firefox */
   input[type="number"] {
     -moz-appearance: textfield;
+    appearance: none;
   }
 
   /* Hide scrollbar but keep scroll functionality */
