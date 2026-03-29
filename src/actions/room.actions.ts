@@ -139,6 +139,7 @@ export async function shareRoomAction(roomId: string, inviteeEmail: string) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/designs/${roomId}`);
 }
 
 export async function deleteInvitationAction(
@@ -176,4 +177,5 @@ export async function deleteInvitationAction(
   if (result.count === 0) throw new Error("Invitation not found");
 
   revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/designs/${roomId}`);
 }

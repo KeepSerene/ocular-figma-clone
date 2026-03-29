@@ -61,7 +61,13 @@ export default function ConfirmationModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
     >
       {/* Backdrop click */}
-      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+      <div
+        onClick={() => {
+          if (!isLoading) onClose();
+        }}
+        aria-hidden="true"
+        className="absolute inset-0"
+      />
 
       {/* Modal */}
       <section className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">

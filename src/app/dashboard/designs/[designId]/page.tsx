@@ -11,6 +11,11 @@ export const metadata: Metadata = {
 
 type DesignPageProps = Promise<{ designId: string }>;
 
+export type Invitee = {
+  id: string;
+  email: string;
+};
+
 // Liveblocks room page
 async function DesignPage({ params }: { params: DesignPageProps }) {
   const { designId } = await params;
@@ -22,7 +27,14 @@ async function DesignPage({ params }: { params: DesignPageProps }) {
       title: true,
       ownerId: true,
       roomInvitations: {
-        select: { invitee: true },
+        select: {
+          invitee: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
       },
     },
   });

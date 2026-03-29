@@ -28,13 +28,13 @@ import NumberInput from "./NumberInput";
 import ColorPicker from "./ColorPicker";
 import Dropdown from "./Dropdown";
 import UserAvatar from "./UserAvatar";
-import type { User } from "generated/prisma";
 import InviteModal from "./InviteModal";
+import type { Invitee } from "~/app/dashboard/designs/[designId]/page";
 
 interface SidebarsProps {
   roomId: string;
   roomTitle: string;
-  invitees: User[];
+  invitees: Invitee[];
   isLeftCollapsed: boolean;
   setIsLeftCollapsed: (value: boolean) => void;
 }

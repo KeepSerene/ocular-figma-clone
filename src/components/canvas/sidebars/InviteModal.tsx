@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import type { User } from "generated/prisma";
 import { Loader2, X } from "lucide-react";
 import { memo, useState } from "react";
 import z from "zod";
@@ -10,10 +9,11 @@ import {
   shareRoomAction,
 } from "~/actions/room.actions";
 import UserAvatar from "./UserAvatar";
+import type { Invitee } from "~/app/dashboard/designs/[designId]/page";
 
 interface InviteModalProps {
   roomId: string;
-  invitees: User[];
+  invitees: Invitee[];
 }
 
 const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
@@ -21,16 +21,25 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
   const [email, setEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | undefined>(undefined);
-  const [isDeletingInvitation, setIsDeletingInvitation] = useState(false);
-  const [deleteInvitationError, setDeleteInvitationError] = useState<
-    string | undefined
-  >(undefined);
+
+  // Track deletion state per invitee instead of one global boolean
+  const [deletingByInvitee, setDeletingByInvitee] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Track deletion errors per invitee instead of one global error
+  const [deleteErrorByInvitee, setDeleteErrorByInvitee] = useState<
+    Record<string, string | undefined>
+  >({});
 
   const inviteUser = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const parsed = z.string().email().safeParse(email);
 
-    if (!parsed.success) return;
+    if (!parsed.success) {
+      setInviteError("Invalid email address");
+      return;
+    }
 
     setIsInviting(true);
     setInviteError(undefined);
@@ -40,7 +49,9 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
       setEmail("");
     } catch (error) {
       console.error("Failed to invite user:", error);
-      setInviteError("Oops! Something went wrong.");
+      setInviteError(
+        error instanceof Error ? error.message : "Oops! Something went wrong.",
+      );
     } finally {
       setIsInviting(false);
     }
@@ -50,16 +61,43 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
     roomId: string,
     inviteeEmail: string,
   ) => {
-    setIsDeletingInvitation(true);
-    setDeleteInvitationError(undefined);
+    // Mark only this invitee as deleting
+    setDeletingByInvitee((prev) => ({
+      ...prev,
+      [inviteeEmail]: true,
+    }));
+
+    // Clear just this invitee's previous delete error
+    setDeleteErrorByInvitee((prev) => ({
+      ...prev,
+      [inviteeEmail]: undefined,
+    }));
 
     try {
       await deleteInvitationAction(roomId, inviteeEmail);
+
+      // Clear the error again after a successful delete, just in case
+      setDeleteErrorByInvitee((prev) => ({
+        ...prev,
+        [inviteeEmail]: undefined,
+      }));
     } catch (error) {
       console.error("Failed to delete invitation:", error);
-      setDeleteInvitationError("Oops! Something went wrong.");
+
+      // Store the error for only this invitee row
+      setDeleteErrorByInvitee((prev) => ({
+        ...prev,
+        [inviteeEmail]:
+          error instanceof Error
+            ? error.message
+            : "Oops! Something went wrong.",
+      }));
     } finally {
-      setIsDeletingInvitation(false);
+      // Always reset only this invitee's loading state
+      setDeletingByInvitee((prev) => ({
+        ...prev,
+        [inviteeEmail]: false,
+      }));
     }
   };
 
@@ -74,7 +112,7 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
         Share
       </button>
 
-      {/* Share modal */}
+      {/* Invite modal */}
       {isOpen && (
         // Backdrop overlay
         <div
@@ -149,51 +187,58 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
                   <p className="text-xs text-gray-500">Invited users</p>
 
                   <ul className="space-y-2">
-                    {invitees.map((invitee) => (
-                      <React.Fragment key={invitee.id}>
-                        <li className="flex items-center justify-between py-1">
-                          <div className="flex items-center gap-x-2">
-                            <UserAvatar
-                              name={invitee.email}
-                              className="size-6"
-                            />
+                    {invitees.map((invitee) => {
+                      // Use invitee email as the row key for loading/error lookup
+                      const isDeleting = deletingByInvitee[invitee.email];
+                      const deleteError = deleteErrorByInvitee[invitee.email];
 
-                            <span className="text-xs select-none">
-                              {invitee.email}
-                            </span>
-                          </div>
+                      return (
+                        <React.Fragment key={invitee.id}>
+                          <li className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-x-2">
+                              <UserAvatar
+                                name={invitee.email}
+                                className="size-6"
+                              />
 
-                          <div className="flex items-center gap-x-1">
-                            <span className="text-xs text-gray-500">
-                              Full-Access
-                            </span>
+                              <span className="text-xs select-none">
+                                {invitee.email}
+                              </span>
+                            </div>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleDeleteInvitation(roomId, invitee.email)
-                              }
-                              disabled={isDeletingInvitation}
-                              aria-label={`Revoke access for ${invitee.email}`}
-                              title="Revoke access"
-                              className="text-gray-400 transition-colors duration-150 hover:text-gray-500 focus-visible:text-gray-500 focus-visible:outline-none disabled:opacity-50"
-                            >
-                              {isDeletingInvitation ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <X className="size-4" />
-                              )}
-                            </button>
-                          </div>
-                        </li>
+                            <div className="flex items-center gap-x-1">
+                              <span className="text-xs text-gray-500">
+                                Full-Access
+                              </span>
 
-                        {deleteInvitationError && (
-                          <p className="text-[10px] text-red-500">
-                            {deleteInvitationError}
-                          </p>
-                        )}
-                      </React.Fragment>
-                    ))}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeleteInvitation(roomId, invitee.email)
+                                }
+                                disabled={isDeleting}
+                                aria-label={`Revoke access for ${invitee.email}`}
+                                title="Revoke access"
+                                className="text-gray-400 transition-colors duration-150 hover:text-gray-500 focus-visible:text-gray-500 focus-visible:outline-none disabled:opacity-50"
+                              >
+                                {isDeleting ? (
+                                  <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                  <X className="size-4" />
+                                )}
+                              </button>
+                            </div>
+                          </li>
+
+                          {/* Show delete error only for the matching invitee row */}
+                          {deleteError && (
+                            <p className="text-[10px] text-red-500">
+                              {deleteError}
+                            </p>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </ul>
                 </>
               )}

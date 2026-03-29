@@ -9,13 +9,16 @@ import { signOutAction } from "~/actions/auth.actions";
 function UserMenu({ email }: { email: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuParentRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   // Close user menu when clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuParentRef.current &&
+        !menuParentRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -37,11 +40,11 @@ function UserMenu({ email }: { email: string | null }) {
   };
 
   return (
-    <div className="relative">
+    <div ref={menuParentRef} className="relative">
       {/* User menu trigger button */}
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex w-fit items-center gap-2 rounded-md p-1 transition-colors duration-200 hover:bg-gray-100 focus-visible:bg-gray-200 focus-visible:outline-none"
       >
         <UserAvatar isSelf={true} name={email ?? "Anonymous"} />
@@ -59,7 +62,6 @@ function UserMenu({ email }: { email: string | null }) {
 
       {/* User menu dropdown */}
       <div
-        ref={menuRef}
         className={`absolute top-0 left-0 min-w-37.5 translate-y-full flex-col rounded-xl bg-[#f5f5f5] p-2 shadow-lg ${
           isOpen ? "flex" : "hidden"
         }`}

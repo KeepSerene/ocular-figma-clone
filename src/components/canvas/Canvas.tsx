@@ -40,12 +40,12 @@ import useDeleteLayers from "~/hooks/useDeleteLayers";
 import LayerContextMenu from "./LayerContextMenu";
 import Sidebars from "./sidebars/Sidebars";
 import LivePresence from "./LivePresence";
-import type { User } from "generated/prisma";
+import type { Invitee } from "~/app/dashboard/designs/[designId]/page";
 
 interface CanvasProps {
   roomId: string;
   roomTitle: string;
-  invitees: User[];
+  invitees: Invitee[];
 }
 
 const MAX_LAYERS = 100;

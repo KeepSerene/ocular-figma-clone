@@ -135,6 +135,8 @@ function RoomCard({
   return (
     <div className="grid grid-cols-1 gap-0.5">
       <div
+        role="button"
+        tabIndex={0}
         onDoubleClick={navigateTo}
         onClick={select}
         style={{ backgroundColor: color }}
@@ -151,13 +153,14 @@ function RoomCard({
       {canEditTitle && isEditingTitle ? (
         <input
           type="text"
-          max={50}
+          maxLength={50}
           value={editedTitle}
           onChange={(event) => setEditedTitle(event.target.value)}
           onBlur={saveTitle}
           onKeyDown={handleKeyDown}
-          placeholder="Title goes here..."
           autoFocus
+          placeholder="Title goes here..."
+          aria-label="Enter design room title"
           className="mt-1 w-full rounded-md border-2 border-white bg-white p-1 text-sm transition-colors duration-150 outline-none hover:border-[#e8e8e8] focus:border-blue-500"
         />
       ) : (
