@@ -9,7 +9,6 @@ import {
   ALargeSmall,
   ArrowLeftRight,
   ArrowUpDown,
-  Bold,
   CircleDashed,
   Ellipse,
   Layers,
@@ -29,8 +28,13 @@ import NumberInput from "./NumberInput";
 import ColorPicker from "./ColorPicker";
 import Dropdown from "./Dropdown";
 import UserAvatar from "./UserAvatar";
+import type { User } from "generated/prisma";
+import InviteModal from "./InviteModal";
 
 interface SidebarsProps {
+  roomId: string;
+  roomTitle: string;
+  invitees: User[];
   isLeftCollapsed: boolean;
   setIsLeftCollapsed: (value: boolean) => void;
 }
@@ -50,7 +54,13 @@ interface LayerUpdateOptions {
 }
 
 const Sidebars = memo(
-  ({ isLeftCollapsed, setIsLeftCollapsed }: SidebarsProps) => {
+  ({
+    roomId,
+    roomTitle,
+    invitees,
+    isLeftCollapsed,
+    setIsLeftCollapsed,
+  }: SidebarsProps) => {
     const me = useSelf();
     const others = useOthers();
 
@@ -133,7 +143,7 @@ const Sidebars = memo(
               </div>
 
               <h2 className="mt-2 scroll-m-20 text-[13px] font-medium">
-                Room name
+                {roomTitle}
               </h2>
             </section>
 
@@ -205,7 +215,7 @@ const Sidebars = memo(
               <OcularIcon size={30} />
             </Link>
 
-            <h2 className="scroll-m-20 text-[13px] font-medium">Room name</h2>
+            <h2 className="scroll-m-20 text-[13px] font-medium">{roomTitle}</h2>
 
             <button
               type="button"
@@ -224,8 +234,8 @@ const Sidebars = memo(
             className={`fixed ${isLeftCollapsed && selectedLayer ? "top-3 right-3 bottom-3 rounded-xl" : ""} ${!isLeftCollapsed && !selectedLayer ? "h-dvh rounded-tl-xl rounded-bl-xl" : ""} ${!isLeftCollapsed && selectedLayer ? "top-0 bottom-0 h-dvh rounded-tl-xl rounded-bl-xl" : ""} right-0 flex w-60 flex-col border-l border-gray-200 bg-white`}
           >
             {/* User avatars + Share button */}
-            <div className="flex items-center justify-between pr-2">
-              <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-scroll p-3 text-xs">
+            <div className="flex items-center justify-between gap-2 p-3">
+              <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-scroll text-xs">
                 {/* My avatar */}
                 {me && (
                   <UserAvatar
@@ -245,7 +255,7 @@ const Sidebars = memo(
                 ))}
               </div>
 
-              <p>Share button</p>
+              <InviteModal roomId={roomId} invitees={invitees} />
             </div>
 
             {/* Separator */}
@@ -503,9 +513,9 @@ const Sidebars = memo(
           </aside>
         ) : (
           // Collapsed state
-          <div className="fixed top-3 right-3 flex h-12 w-62.5 items-center justify-between gap-2 rounded-xl border bg-white pr-2">
-            <div className="flex items-center justify-between pr-2">
-              <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-scroll p-3 text-xs">
+          <div className="fixed top-3 right-3 flex h-12 w-62.5 items-center justify-between gap-2 rounded-xl border bg-white p-3">
+            <div className="flex w-full items-center justify-between gap-2">
+              <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-scroll text-xs">
                 {/* My avatar */}
                 {me && (
                   <UserAvatar
@@ -525,7 +535,7 @@ const Sidebars = memo(
                 ))}
               </div>
 
-              <p>Share menu</p>
+              <InviteModal roomId={roomId} invitees={invitees} />
             </div>
           </div>
         )}

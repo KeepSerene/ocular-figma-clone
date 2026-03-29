@@ -4,12 +4,12 @@ import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { signUpFormSchema } from "~/schemas";
+import { signUpFormSchema } from "~/validations";
 import { signIn, signOut } from "~/server/auth";
 import { db } from "~/server/db";
 
 export async function signInAction(
-  prevState: string | undefined,
+  _prevState: string | undefined,
   formData: FormData,
 ) {
   try {
@@ -37,7 +37,7 @@ export async function signInAction(
 }
 
 export async function signUpAction(
-  prevState: string | undefined,
+  _prevState: string | undefined,
   formData: FormData,
 ) {
   try {
@@ -75,8 +75,10 @@ export async function signUpAction(
 
 export async function signOutAction() {
   try {
-    await signOut();
+    // clear cookie only; client drives navigation (see UserMenu.tsx)
+    await signOut({ redirect: false });
   } catch (error) {
     console.error("Error in sign out action:", error);
+    return;
   }
 }

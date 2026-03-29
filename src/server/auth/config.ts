@@ -2,7 +2,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { signInFormSchema } from "~/schemas";
+import { signInFormSchema } from "~/validations";
 import { db } from "~/server/db";
 
 /**

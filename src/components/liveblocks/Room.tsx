@@ -1,6 +1,6 @@
 "use client";
 
-import { LiveList, LiveMap, LiveObject } from "@liveblocks/client";
+import { LiveList, LiveMap, type LiveObject } from "@liveblocks/client";
 import {
   ClientSideSuspense,
   LiveblocksProvider,

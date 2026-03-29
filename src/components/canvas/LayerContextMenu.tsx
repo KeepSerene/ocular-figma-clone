@@ -7,14 +7,6 @@ import { BringToFront, SendToBack } from "lucide-react";
 import { useMutation } from "@liveblocks/react";
 
 const LayerContextMenu = memo(({ camera }: { camera: Camera }) => {
-  const bounds = useSelectionBoxBounds(); // for positioning the context menu relative to the selection box
-
-  if (!bounds) return null;
-
-  // Canvas space point -> screen space point (see screenToCanvas() in utils.ts)
-  const x = (bounds.x + bounds.width / 2) * camera.zoom + camera.x;
-  const y = bounds.y * camera.zoom + camera.y;
-
   /*
    * In Liveblocks, the rendering order is determined by the order of IDs in our LiveList (layerIds).
    * The last item in the list is rendered "on top."
@@ -64,6 +56,14 @@ const LayerContextMenu = memo(({ camera }: { camera: Camera }) => {
       liveLayerIds.move(indices[i]!, target);
     }
   }, []);
+
+  const bounds = useSelectionBoxBounds(); // for positioning the context menu relative to the selection box
+
+  if (!bounds) return null;
+
+  // Canvas space point -> screen space point (see screenToCanvas() in utils.ts)
+  const x = (bounds.x + bounds.width / 2) * camera.zoom + camera.x;
+  const y = bounds.y * camera.zoom + camera.y;
 
   return (
     <div

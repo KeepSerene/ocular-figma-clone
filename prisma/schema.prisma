@@ -15,18 +15,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
@@ -56,15 +44,16 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    password      String
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+    id              String           @id @default(cuid())
+    name            String?
+    email           String           @unique
+    emailVerified   DateTime?
+    image           String?
+    password        String
+    accounts        Account[]
+    sessions        Session[]
+    ownedRooms      Room[]           @relation("RoomOwner")
+    roomInvitations RoomInvitation[]
 }
 
 model VerificationToken {
@@ -73,4 +62,24 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Room {
+    id              String           @id @default(cuid())
+    ownerId         String
+    owner           User             @relation("RoomOwner", fields: [ownerId], references: [id])
+    createdAt       DateTime         @default(now())
+    title           String           @default("Untitled")
+    roomInvitations RoomInvitation[]
+}
+
+model RoomInvitation {
+    id        String @id @default(cuid())
+    roomId    String
+    room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+    inviteeId String
+    invitee   User   @relation(fields: [inviteeId], references: [id])
+
+    @@unique([roomId, inviteeId])
+    @@map("RoomInvitation")
 }

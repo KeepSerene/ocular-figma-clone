@@ -1,24 +1,26 @@
-import { Liveblocks } from "@liveblocks/node";
-import { env } from "~/env";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { liveblocks } from "~/server/liveblocks";
 
-const liveblocks = new Liveblocks({
-  secret: env.LIVEBLOCKS_SECRET_KEY,
-});
-
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   try {
     // 1. Get the current user session
     const userSession = await auth();
 
-    // Guard
     if (!userSession?.user) {
       return new Response("Unauthorized", { status: 401 });
     }
 
     const user = await db.user.findUniqueOrThrow({
       where: { id: userSession.user.id },
+      include: {
+        ownedRooms: true,
+        roomInvitations: {
+          include: {
+            room: true,
+          },
+        },
+      },
     });
 
     // 2. Start a liveblocks session
@@ -28,13 +30,18 @@ export async function POST(req: Request) {
       },
     });
 
-    // 3. Extract the room from the request body
-    // Liveblocks sends this automatically when the client connects
-    const { room } = await req.json();
+    // 3. Give user full-access to all the rooms they own (created)
+    user.ownedRooms.map((room) => {
+      liveblocksSession.allow(`room:${room.id}`, liveblocksSession.FULL_ACCESS);
+    });
 
-    // 4. Grant access
-    const roomId = room || "room:test";
-    liveblocksSession.allow(roomId, liveblocksSession.FULL_ACCESS);
+    // 4. Give user full-access to all the rooms they were invited to
+    user.roomInvitations.map((invitee) => {
+      liveblocksSession.allow(
+        `room:${invitee.roomId}`,
+        liveblocksSession.FULL_ACCESS,
+      );
+    });
 
     // 5. Authorize the user and return the result
     const { status, body } = await liveblocksSession.authorize();
