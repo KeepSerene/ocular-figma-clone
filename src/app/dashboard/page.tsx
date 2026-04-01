@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import UserMenu from "~/components/dashboard/UserMenu";
 import NewDesignButton from "~/components/dashboard/NewDesignButton";
 import DesignLibrary from "~/components/dashboard/DesignLibrary";
+import Sidebar from "~/components/dashboard/Sidebar";
 
 export const metadata: Metadata = {
   title: "Dashboard",
+  description:
+    "Your Ocular workspace. Create new designs, revisit recent canvases, and access projects shared with you.",
+  // Authenticated pages should not be indexed by search engines
+  robots: { index: false, follow: false },
 };
 
 async function DashboardPage() {
@@ -27,20 +31,21 @@ async function DashboardPage() {
   if (!user) return null;
 
   return (
-    <main className="flex h-dvh w-full">
+    <main className="bg-background flex h-dvh w-full overflow-hidden">
       {/* Left sidebar */}
-      <aside className="flex h-dvh min-w-66 flex-col rounded-lg border-r border-gray-200 bg-white p-2 shadow-md">
-        <UserMenu email={user.email} />
+      <Sidebar email={user.email} />
 
-        {/* TO-DO: PUT NOTES/TIPS RELATED TO THE ROOM CANVAS HERE... */}
-      </aside>
-
-      <section className="flex h-dvh w-full flex-1 flex-col">
-        <div className="flex min-h-12.5 items-center border-b border-gray-200 bg-white pl-8">
-          <h2 className="text-sm font-semibold select-none">Recents</h2>
+      {/* Main content area */}
+      <section className="flex h-dvh min-w-0 flex-1 flex-col">
+        {/* Top bar */}
+        <div className="border-border bg-card flex min-h-12 shrink-0 items-center border-b px-6">
+          <h2 className="text-foreground text-sm font-semibold select-none">
+            Recents
+          </h2>
         </div>
 
-        <div className="flex h-full flex-1 flex-col gap-10 p-8">
+        {/* Scrollable content */}
+        <div className="flex h-full flex-1 flex-col gap-8 overflow-y-auto p-6 md:p-8">
           <NewDesignButton />
 
           <DesignLibrary

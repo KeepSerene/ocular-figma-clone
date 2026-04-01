@@ -1,50 +1,6 @@
-interface LogoProps {
-  size?: number;
-  showText?: boolean;
-  className?: string;
-}
-
-export default function Logo({
-  size = 32,
-  showText = true,
-  className = "",
-}: LogoProps) {
-  return (
-    <div
-      className={className}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: `${Math.round(size * 0.28)}px`,
-        color: "currentColor",
-      }}
-    >
-      <OcularIcon size={size} />
-
-      {showText && (
-        <span
-          style={{
-            fontFamily:
-              "var(--font-space-grotesk), 'Space Grotesk', ui-sans-serif, system-ui, sans-serif",
-            fontSize: `${size * 0.72}px`,
-            fontWeight: 500,
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
-            color: "currentColor",
-            userSelect: "none",
-          }}
-        >
-          Ocular
-        </span>
-      )}
-    </div>
-  );
-}
-
 /*
  * ICON ONLY - LOGO MARK
  */
-
 export const OcularIcon = ({ size = 32 }: { size?: number }) => (
   <svg
     width={size}
@@ -126,3 +82,40 @@ export const OcularIcon = ({ size = 32 }: { size?: number }) => (
     <circle cx="26.5" cy="26.5" r="1.75" fill="currentColor" opacity="0.4" />
   </svg>
 );
+
+interface LogoProps {
+  size?: number;
+  showText?: boolean;
+  className?: string;
+}
+
+const Logo = ({ size = 32, showText = true, className = "" }: LogoProps) => (
+  <div
+    className={className}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: `${Math.round(size * 0.28)}px`,
+    }}
+  >
+    <OcularIcon size={size} />
+
+    {showText && (
+      <span
+        style={{
+          fontFamily:
+            "var(--font-sans), 'Open Sans', ui-sans-serif, system-ui, sans-serif",
+          fontSize: `${size * 0.72}px`,
+          fontWeight: 600,
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
+          userSelect: "none",
+        }}
+      >
+        Ocular
+      </span>
+    )}
+  </div>
+);
+
+export default Logo;

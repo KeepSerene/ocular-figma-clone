@@ -15,10 +15,10 @@ import {
   MoveHorizontal,
   MoveVertical,
   Palette,
+  PanelLeftClose,
+  PanelLeftOpen,
   PenTool,
   RectangleHorizontal,
-  SquareChevronDown,
-  SquareChevronUp,
   SquareRoundCorner,
   Text,
 } from "lucide-react";
@@ -31,6 +31,9 @@ import UserAvatar from "./UserAvatar";
 import InviteModal from "./InviteModal";
 import type { Invitee } from "~/app/dashboard/designs/[designId]/page";
 
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
 interface SidebarsProps {
   roomId: string;
   roomTitle: string;
@@ -53,6 +56,14 @@ interface LayerUpdateOptions {
   opacity?: number;
 }
 
+const Divider = () => <div className="border-border border-t" />;
+
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+    {children}
+  </span>
+);
+
 const Sidebars = memo(
   ({
     roomId,
@@ -65,20 +76,23 @@ const Sidebars = memo(
     const others = useOthers();
 
     const selectedLayerId = useSelf((me) => {
-      const selections = me.presence.selections;
-
+      const { selections } = me.presence;
       return selections.length === 1 ? selections[0] : null;
     });
+
     const selectedLayer = useStorage((root) => {
       if (!selectedLayerId) return null;
 
       return root.layers.get(selectedLayerId);
     });
+
     const canvasColor = useStorage((root) => root.canvasColor);
     const layers = useStorage((root) => root.layers);
     const layerIds = useStorage((root) => root.layerIds);
-    const reversedLayerIds = [...(layerIds ?? [])].reverse();
     const selections = useSelf((me) => me.presence.selections);
+
+    // Reversed so newest layers appear at the top of the list
+    const reversedLayerIds = [...(layerIds ?? [])].reverse();
 
     const setCanvasColor = useMutation(({ storage }, newColor: Color) => {
       storage.set("canvasColor", newColor);
@@ -87,276 +101,290 @@ const Sidebars = memo(
     const updateLayer = useMutation(
       ({ storage }, options: LayerUpdateOptions) => {
         if (!selectedLayerId) return;
-
         const liveLayers = storage.get("layers");
-        const selectedLayer = liveLayers.get(selectedLayerId);
+        const layer = liveLayers.get(selectedLayerId);
+        if (!layer) return;
 
-        if (selectedLayer) {
-          selectedLayer.update({
-            ...(options.x !== undefined && { x: options.x }),
-            ...(options.y !== undefined && { y: options.y }),
-            ...(options.width !== undefined && { width: options.width }),
-            ...(options.height !== undefined && { height: options.height }),
-            ...(options.fill !== undefined && { fill: hexToRgb(options.fill) }),
-            ...(options.cornerRadius !== undefined && {
-              cornerRadius: options.cornerRadius,
-            }),
-            ...(options.stroke !== undefined && {
-              stroke: hexToRgb(options.stroke),
-            }),
-            ...(options.fontFamily !== undefined && {
-              fontFamily: options.fontFamily,
-            }),
-            ...(options.fontSize !== undefined && {
-              fontSize: options.fontSize,
-            }),
-            ...(options.fontWeight !== undefined && {
-              fontWeight: options.fontWeight,
-            }),
-            ...(options.opacity !== undefined && { opacity: options.opacity }),
-          });
-        }
+        layer.update({
+          ...(options.x !== undefined && { x: options.x }),
+          ...(options.y !== undefined && { y: options.y }),
+          ...(options.width !== undefined && { width: options.width }),
+          ...(options.height !== undefined && { height: options.height }),
+          ...(options.fill !== undefined && { fill: hexToRgb(options.fill) }),
+          ...(options.cornerRadius !== undefined && {
+            cornerRadius: options.cornerRadius,
+          }),
+          ...(options.stroke !== undefined && {
+            stroke: hexToRgb(options.stroke),
+          }),
+          ...(options.fontFamily !== undefined && {
+            fontFamily: options.fontFamily,
+          }),
+          ...(options.fontSize !== undefined && { fontSize: options.fontSize }),
+          ...(options.fontWeight !== undefined && {
+            fontWeight: options.fontWeight,
+          }),
+          ...(options.opacity !== undefined && { opacity: options.opacity }),
+        });
       },
       [selectedLayerId],
     );
 
+    const AvatarRow = (
+      <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
+        {me && (
+          <UserAvatar
+            isSelf
+            color={connectionIdToColor(me.connectionId)}
+            name={me.info.name}
+          />
+        )}
+
+        {others.map((other) => (
+          <UserAvatar
+            key={other.connectionId}
+            color={connectionIdToColor(other.connectionId)}
+            name={other.info.name}
+          />
+        ))}
+      </div>
+    );
+
+    // ═══════════════════════════════════════════════════════════
+    // COLLAPSED — single floating top bar
+    // ═══════════════════════════════════════════════════════════
+    if (isLeftCollapsed) {
+      return (
+        <div className="border-border bg-card fixed top-3 right-0 left-0 z-20 mx-auto flex w-fit max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-xl border px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
+          {/* Logo */}
+          <Link
+            href="/dashboard"
+            className="text-primary hover:text-primary/90 focus-visible:text-primary/90 shrink-0 transition-colors duration-150 focus-visible:outline-none"
+            aria-label="Back to dashboard"
+          >
+            <OcularIcon size={22} />
+          </Link>
+
+          {/* Separator */}
+          <div className="bg-border h-5 w-px shrink-0" />
+
+          {/* Room title */}
+          <span className="text-foreground max-w-24 truncate text-xs font-medium sm:max-w-40">
+            {roomTitle}
+          </span>
+
+          {/* Flexible gap */}
+          <div className="min-w-3 flex-1 sm:min-w-8" />
+
+          {/* Collaborator avatars */}
+          {AvatarRow}
+
+          {/* Share button */}
+          <InviteModal roomId={roomId} invitees={invitees} />
+
+          {/* Separator */}
+          <div className="bg-border h-5 w-px shrink-0" />
+
+          {/* Expand panels */}
+          <button
+            type="button"
+            onClick={() => setIsLeftCollapsed(false)}
+            aria-label="Expand sidebars"
+            title="Expand sidebars"
+            className="btn btn-icon btn-ghost btn-sm shrink-0"
+          >
+            <PanelLeftOpen className="size-4" />
+          </button>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // EXPANDED — left sidebar + right sidebar
+    // ═══════════════════════════════════════════════════════════
     return (
       <>
-        {/* Left sidebar */}
-        {!isLeftCollapsed ? (
-          // Expanded state
-          <aside className="fixed left-0 flex h-dvh w-60 flex-col rounded-tr-xl rounded-br-xl border-r border-gray-200 bg-white">
-            <section className="border-b border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <Link href="/dashboard">
-                  <OcularIcon size={30} />
-                </Link>
+        {/* ── LEFT SIDEBAR ─────────────────────────────────── */}
+        <aside className="border-border bg-card fixed top-0 left-0 z-10 flex h-dvh w-60 flex-col border-r">
+          {/* Header */}
+          <header className="border-border flex items-center gap-2 border-b px-3 py-2.5">
+            <Link
+              href="/dashboard"
+              className="text-primary hover:text-primary/90 focus-visible:text-primary/90 shrink-0 transition-colors duration-150 focus-visible:outline-none"
+              aria-label="Back to dashboard"
+            >
+              <OcularIcon size={26} />
+            </Link>
 
-                <button
-                  type="button"
-                  onClick={() => setIsLeftCollapsed(true)}
-                  aria-label="Click collapse sidebar"
-                  title="Collapse"
-                >
-                  <SquareChevronUp className="size-5" />
-                </button>
-              </div>
+            <h2 className="text-foreground flex-1 truncate text-xs font-medium">
+              {roomTitle}
+            </h2>
 
-              <h2 className="mt-2 scroll-m-20 text-[13px] font-medium">
-                {roomTitle}
-              </h2>
-            </section>
+            <button
+              type="button"
+              onClick={() => setIsLeftCollapsed(true)}
+              aria-label="Collapse sidebars"
+              title="Collapse"
+              className="btn btn-icon btn-ghost btn-sm shrink-0"
+            >
+              <PanelLeftClose className="size-4" />
+            </button>
+          </header>
 
-            {/* Layers */}
-            <ul className="flex flex-col gap-1 p-4">
-              <p className="mb-2 flex items-center gap-2">
-                <Layers className="size-4" />
-                <span className="text-sm font-medium">Layers</span>
-              </p>
+          {/* Layers panel */}
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2.5">
+              <Layers className="text-muted-foreground size-3.5 shrink-0" />
 
-              {layerIds &&
-                layerIds.length > 0 &&
+              <span className="text-foreground text-xs font-medium">
+                Layers
+              </span>
+            </div>
+            {/* Layer list */}
+            <ul className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-3">
+              {layerIds && layerIds.length > 0 ? (
                 reversedLayerIds.map((id) => {
                   const layer = layers?.get(id);
-                  const isSelected = selections?.includes(id);
+                  const isSelected = selections?.includes(id) ?? false;
 
-                  if (layer?.type === LayerType.RECTANGLE) {
+                  if (layer?.type === LayerType.RECTANGLE)
                     return (
                       <li key={id}>
                         <LayerButton
                           layerId={id}
-                          isSelected={isSelected ?? false}
+                          isSelected={isSelected}
                           icon={RectangleHorizontal}
                           label="Rectangle"
                         />
                       </li>
                     );
-                  } else if (layer?.type === LayerType.ELLIPSE) {
+
+                  if (layer?.type === LayerType.ELLIPSE)
                     return (
                       <li key={id}>
                         <LayerButton
                           layerId={id}
-                          isSelected={isSelected ?? false}
+                          isSelected={isSelected}
                           icon={Ellipse}
                           label="Ellipse"
                         />
                       </li>
                     );
-                  } else if (layer?.type === LayerType.PATH) {
+
+                  if (layer?.type === LayerType.PATH)
                     return (
                       <li key={id}>
                         <LayerButton
                           layerId={id}
-                          isSelected={isSelected ?? false}
+                          isSelected={isSelected}
                           icon={PenTool}
                           label="Drawing"
                         />
                       </li>
                     );
-                  } else if (layer?.type === LayerType.TEXT) {
+
+                  if (layer?.type === LayerType.TEXT)
                     return (
                       <li key={id}>
                         <LayerButton
                           layerId={id}
-                          isSelected={isSelected ?? false}
+                          isSelected={isSelected}
                           icon={Text}
                           label="Text"
                         />
                       </li>
                     );
-                  }
-                })}
+
+                  return null;
+                })
+              ) : (
+                <li className="px-2 py-6 text-center">
+                  <p className="text-muted-foreground text-xs">
+                    No layers yet.
+                  </p>
+                </li>
+              )}
             </ul>
-          </aside>
-        ) : (
-          // Collapsed state
-          <section className="fixed top-3 left-3 flex h-12 w-62.5 items-center justify-between rounded-xl border bg-white p-4">
-            <Link href="/dashboard">
-              <OcularIcon size={30} />
-            </Link>
+          </div>
+        </aside>
 
-            <h2 className="scroll-m-20 text-[13px] font-medium">{roomTitle}</h2>
+        {/* ── RIGHT SIDEBAR ────────────────────────────────── */}
+        <aside className="border-border bg-card fixed top-0 right-0 z-10 flex h-dvh w-60 flex-col border-l">
+          {/* Header */}
+          <div className="border-border flex items-center justify-between gap-2 border-b px-3 py-2.5">
+            {AvatarRow}
+            <InviteModal roomId={roomId} invitees={invitees} />
+          </div>
 
-            <button
-              type="button"
-              onClick={() => setIsLeftCollapsed(false)}
-              aria-label="Click to expand sidebar"
-              title="Expand"
-            >
-              <SquareChevronDown className="size-5" />
-            </button>
-          </section>
-        )}
-
-        {/* Right sidebar */}
-        {!isLeftCollapsed || selectedLayer ? (
-          <aside
-            className={`fixed ${isLeftCollapsed && selectedLayer ? "top-3 right-3 bottom-3 rounded-xl" : ""} ${!isLeftCollapsed && !selectedLayer ? "h-dvh rounded-tl-xl rounded-bl-xl" : ""} ${!isLeftCollapsed && selectedLayer ? "top-0 bottom-0 h-dvh rounded-tl-xl rounded-bl-xl" : ""} right-0 flex w-60 flex-col border-l border-gray-200 bg-white`}
-          >
-            {/* User avatars + Share button */}
-            <div className="flex items-center justify-between gap-2 p-3">
-              <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-scroll text-xs">
-                {/* My avatar */}
-                {me && (
-                  <UserAvatar
-                    isSelf={true}
-                    color={connectionIdToColor(me.connectionId)}
-                    name={me.info.name}
-                  />
-                )}
-
-                {/* Others' avatars */}
-                {others.map((other) => (
-                  <UserAvatar
-                    key={other.connectionId}
-                    color={connectionIdToColor(other.connectionId)}
-                    name={other.info.name}
-                  />
-                ))}
-              </div>
-
-              <InviteModal roomId={roomId} invitees={invitees} />
-            </div>
-
-            {/* Separator */}
-            <div className="border-b border-gray-200" />
-
+          {/* Properties panel */}
+          <div className="flex flex-1 flex-col overflow-y-auto">
             {selectedLayer ? (
               <>
-                {/* ==== Position ==== */}
-                <div className="flex flex-col gap-1 p-4">
-                  <span className="text-xs font-medium">Position</span>
+                {/* Position */}
+                <div className="flex flex-col gap-2 p-3">
+                  <SectionLabel>Position</SectionLabel>
 
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-medium text-gray-500">
-                      Coordinates
-                    </span>
+                  <div className="flex items-center gap-1.5">
+                    <NumberInput
+                      value={selectedLayer.x}
+                      onChange={(val) => updateLayer({ x: val })}
+                      icon={MoveHorizontal}
+                      className="w-1/2"
+                    />
 
-                    <div className="flex w-full items-center gap-2">
-                      {/* x */}
-                      <NumberInput
-                        value={selectedLayer.x}
-                        onChange={(val) => {
-                          updateLayer({ x: val });
-                        }}
-                        icon={MoveHorizontal}
-                        className="w-1/2"
-                      />
-
-                      {/* y */}
-                      <NumberInput
-                        value={selectedLayer.y}
-                        onChange={(val) => {
-                          updateLayer({ y: val });
-                        }}
-                        icon={MoveVertical}
-                        className="w-1/2"
-                      />
-                    </div>
+                    <NumberInput
+                      value={selectedLayer.y}
+                      onChange={(val) => updateLayer({ y: val })}
+                      icon={MoveVertical}
+                      className="w-1/2"
+                    />
                   </div>
                 </div>
 
                 {selectedLayer.type !== LayerType.PATH && (
                   <>
-                    {/* Separator */}
-                    <div className="border-b border-gray-200" />
+                    <Divider />
 
-                    {/* ==== Layout ==== */}
-                    <div className="flex flex-col gap-1 p-4">
-                      <span className="text-xs font-medium">Layout</span>
+                    {/* Dimensions */}
+                    <div className="flex flex-col gap-2 p-3">
+                      <SectionLabel>Dimensions</SectionLabel>
 
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-medium text-gray-500">
-                          Dimensions
-                        </span>
+                      <div className="flex items-center gap-1.5">
+                        <NumberInput
+                          value={selectedLayer.width}
+                          onChange={(val) => updateLayer({ width: val })}
+                          icon={ArrowLeftRight}
+                          className="w-1/2"
+                        />
 
-                        <div className="flex w-full items-center gap-2">
-                          {/* width */}
-                          <NumberInput
-                            value={selectedLayer.width}
-                            onChange={(val) => {
-                              updateLayer({ width: val });
-                            }}
-                            icon={ArrowLeftRight}
-                            className="w-1/2"
-                          />
-
-                          {/* height */}
-                          <NumberInput
-                            value={selectedLayer.height}
-                            onChange={(val) => {
-                              updateLayer({ height: val });
-                            }}
-                            icon={ArrowUpDown}
-                            className="w-1/2"
-                          />
-                        </div>
+                        <NumberInput
+                          value={selectedLayer.height}
+                          onChange={(val) => updateLayer({ height: val })}
+                          icon={ArrowUpDown}
+                          className="w-1/2"
+                        />
                       </div>
                     </div>
                   </>
                 )}
 
-                {/* Separator */}
-                <div className="border-b border-gray-200" />
+                <Divider />
 
-                {/* ==== Appearance ==== */}
-                <div className="flex flex-col gap-1 p-4">
-                  <span className="text-xs font-medium">Appearance</span>
+                {/* Appearance: opacity + corner radius */}
+                <div className="flex flex-col gap-2 p-3">
+                  <SectionLabel>Appearance</SectionLabel>
 
-                  <div className="flex w-full items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <div className="flex w-1/2 flex-col gap-1">
-                      <span className="text-[10px] font-medium text-gray-500">
+                      <span className="text-muted-foreground text-[10px]">
                         Opacity
                       </span>
 
-                      {/* opacity */}
                       <NumberInput
                         min={0}
                         max={1}
                         value={selectedLayer.opacity}
-                        onChange={(val) => {
-                          updateLayer({ opacity: val });
-                        }}
+                        onChange={(val) => updateLayer({ opacity: val })}
                         icon={CircleDashed}
                         className="w-full"
                       />
@@ -364,11 +392,10 @@ const Sidebars = memo(
 
                     {selectedLayer.type === LayerType.RECTANGLE && (
                       <div className="flex w-1/2 flex-col gap-1">
-                        <span className="text-[10px] font-medium text-gray-500">
-                          Corner Radius
+                        <span className="text-muted-foreground text-[10px]">
+                          Radius
                         </span>
 
-                        {/* corner radius */}
                         <NumberInput
                           min={0}
                           max={
@@ -378,9 +405,7 @@ const Sidebars = memo(
                             ) / 2
                           }
                           value={selectedLayer.cornerRadius ?? 0}
-                          onChange={(val) => {
-                            updateLayer({ cornerRadius: val });
-                          }}
+                          onChange={(val) => updateLayer({ cornerRadius: val })}
                           icon={SquareRoundCorner}
                           className="w-full"
                         />
@@ -389,104 +414,84 @@ const Sidebars = memo(
                   </div>
                 </div>
 
-                {/* Separator */}
-                <div className="border-b border-gray-200" />
+                <Divider />
 
-                {/* ==== Fill ==== */}
-                <div className="flex flex-col gap-1 p-4">
-                  <span className="text-[10px] font-medium text-gray-500">
-                    Fill
-                  </span>
+                {/* Fill */}
+                <div className="flex flex-col gap-1.5 p-3">
+                  <SectionLabel>Fill</SectionLabel>
 
                   <ColorPicker
                     color={colorObjToHex(selectedLayer.fill)}
-                    onChange={(color) => {
-                      updateLayer({ fill: color });
-                    }}
+                    onChange={(color) => updateLayer({ fill: color })}
                   />
                 </div>
 
-                {/* Separator */}
-                <div className="border-b border-gray-200" />
+                <Divider />
 
-                {/* ==== Stroke ==== */}
-                <div className="flex flex-col gap-1 p-4">
-                  <span className="text-[10px] font-medium text-gray-500">
-                    Stroke
-                  </span>
+                {/* Stroke */}
+                <div className="flex flex-col gap-1.5 p-3">
+                  <SectionLabel>Stroke</SectionLabel>
 
                   <ColorPicker
                     color={colorObjToHex(selectedLayer.stroke)}
-                    onChange={(color) => {
-                      updateLayer({ stroke: color });
-                    }}
+                    onChange={(color) => updateLayer({ stroke: color })}
                   />
-
-                  {/* ==== Typography ==== */}
                 </div>
 
+                {/* Typography (text layers only) */}
                 {selectedLayer.type === LayerType.TEXT && (
                   <>
-                    {/* Separator */}
-                    <div className="border-b border-gray-200" />
+                    <Divider />
 
-                    {/* ==== Typography ==== */}
-                    <div className="flex flex-col gap-1 p-4">
-                      <span className="text-[10px] font-medium text-gray-500">
-                        Typography
-                      </span>
+                    <div className="flex flex-col gap-2 p-3">
+                      <SectionLabel>Typography</SectionLabel>
 
-                      <div className="flex flex-col gap-2">
-                        {/* ==== Font family ==== */}
-                        <Dropdown
-                          value={selectedLayer.fontFamily}
-                          onChange={(value) => {
-                            updateLayer({ fontFamily: value });
-                          }}
-                          options={["Inter", "Arial", "Times New Roman"]}
-                        />
+                      {/* Font family */}
+                      <Dropdown
+                        value={selectedLayer.fontFamily}
+                        onChange={(value) => updateLayer({ fontFamily: value })}
+                        options={["Inter", "Arial", "Times New Roman"]}
+                      />
 
-                        <div className="flex w-full items-center gap-2">
-                          {/* ==== Font size ==== */}
-                          <div className="flex w-full flex-col gap-1">
-                            <span className="text-[10px] font-medium text-gray-500">
-                              Size
-                            </span>
+                      {/* Size + Weight */}
+                      <div className="flex items-end gap-1.5">
+                        <div className="flex w-1/2 flex-col gap-1">
+                          <span className="text-muted-foreground text-[10px]">
+                            Size
+                          </span>
 
-                            <NumberInput
-                              value={selectedLayer.fontSize}
-                              onChange={(value) => {
-                                updateLayer({ fontSize: value });
-                              }}
-                              icon={ALargeSmall}
-                              className="w-full"
-                            />
-                          </div>
+                          <NumberInput
+                            value={selectedLayer.fontSize}
+                            onChange={(value) =>
+                              updateLayer({ fontSize: value })
+                            }
+                            icon={ALargeSmall}
+                            className="w-full"
+                          />
+                        </div>
 
-                          {/* ==== Font weight ==== */}
-                          <div className="flex w-full flex-col gap-1">
-                            <span className="text-[10px] font-medium text-gray-500">
-                              Weight
-                            </span>
+                        <div className="flex w-1/2 flex-col gap-1">
+                          <span className="text-muted-foreground text-[10px]">
+                            Weight
+                          </span>
 
-                            <Dropdown
-                              value={selectedLayer.fontWeight.toString()}
-                              onChange={(value) => {
-                                updateLayer({ fontWeight: +value });
-                              }}
-                              options={[
-                                "100",
-                                "200",
-                                "300",
-                                "400",
-                                "500",
-                                "600",
-                                "700",
-                                "800",
-                                "900",
-                              ]}
-                            />
-                          </div>
+                          <Dropdown
+                            value={selectedLayer.fontWeight.toString()}
+                            onChange={(value) =>
+                              updateLayer({ fontWeight: +value })
+                            }
+                            options={[
+                              "100",
+                              "200",
+                              "300",
+                              "400",
+                              "500",
+                              "600",
+                              "700",
+                              "800",
+                              "900",
+                            ]}
+                          />
                         </div>
                       </div>
                     </div>
@@ -494,51 +499,24 @@ const Sidebars = memo(
                 )}
               </>
             ) : (
-              // Canvas color
-              <div className="flex flex-col gap-2 p-4">
-                <div className="flex items-center gap-1 text-gray-500">
-                  <Palette className="size-4" />
+              /* ── No selection ── */
+              <div className="flex flex-col gap-2 p-3">
+                <div className="text-muted-foreground mb-0.5 flex items-center gap-1.5">
+                  <Palette className="size-3.5" />
                   <span className="text-xs font-medium">Canvas</span>
                 </div>
 
                 <ColorPicker
-                  color={canvasColor ? colorObjToHex(canvasColor) : "#1e1e1e"}
+                  color={canvasColor ? colorObjToHex(canvasColor) : "#1a1a1e"}
                   onChange={(color) => {
-                    const rgbColor = hexToRgb(color);
-                    setCanvasColor(rgbColor ?? { r: 30, g: 30, b: 30 });
+                    const rgb = hexToRgb(color);
+                    setCanvasColor(rgb ?? { r: 30, g: 30, b: 30 });
                   }}
                 />
               </div>
             )}
-          </aside>
-        ) : (
-          // Collapsed state
-          <div className="fixed top-3 right-3 flex h-12 w-62.5 items-center justify-between gap-2 rounded-xl border bg-white p-3">
-            <div className="flex w-full items-center justify-between gap-2">
-              <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-scroll text-xs">
-                {/* My avatar */}
-                {me && (
-                  <UserAvatar
-                    isSelf={true}
-                    color={connectionIdToColor(me.connectionId)}
-                    name={me.info.name}
-                  />
-                )}
-
-                {/* Others' avatars */}
-                {others.map((other) => (
-                  <UserAvatar
-                    key={other.connectionId}
-                    color={connectionIdToColor(other.connectionId)}
-                    name={other.info.name}
-                  />
-                ))}
-              </div>
-
-              <InviteModal roomId={roomId} invitees={invitees} />
-            </div>
           </div>
-        )}
+        </aside>
       </>
     );
   },

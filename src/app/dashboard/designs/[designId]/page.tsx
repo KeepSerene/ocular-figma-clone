@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Room from "~/components/liveblocks/Room";
 import Canvas from "~/components/canvas/Canvas";
 import { db } from "~/server/db";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "~/server/auth";
 
 export const metadata: Metadata = {
   title: "Design",
+  description:
+    "An active Ocular design canvas. Draw shapes, write text, sketch freehand, and collaborate with your team in real time.",
+  // Design canvases are private and access-controlled — keep them out of search indexes
+  robots: { index: false, follow: false },
 };
 
 type DesignPageProps = Promise<{ designId: string }>;
@@ -40,7 +44,7 @@ async function DesignPage({ params }: { params: DesignPageProps }) {
   });
 
   if (!room) {
-    return redirect("/not-found");
+    notFound();
   }
 
   const inviteeIds = room.roomInvitations.map(
@@ -55,17 +59,21 @@ async function DesignPage({ params }: { params: DesignPageProps }) {
     session.user.id !== room.ownerId &&
     !inviteeIds.includes(session.user.id)
   ) {
-    return redirect("/not-found");
+    notFound();
   }
 
   return (
-    <Room roomId={`room:${designId}`}>
-      <Canvas
-        roomId={room.id}
-        roomTitle={room.title}
-        invitees={room.roomInvitations.map((invitation) => invitation.invitee)}
-      />
-    </Room>
+    <div className="overflow-hidden overscroll-none">
+      <Room roomId={`room:${designId}`}>
+        <Canvas
+          roomId={room.id}
+          roomTitle={room.title}
+          invitees={room.roomInvitations.map(
+            (invitation) => invitation.invitee,
+          )}
+        />
+      </Room>
+    </div>
   );
 }
 

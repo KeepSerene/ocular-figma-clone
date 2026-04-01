@@ -79,11 +79,11 @@ const PointerSelectButton = memo(
 
         {/* Pointers selection menu */}
         {isOpen && (
-          <div className="absolute -top-20 min-w-37.5 rounded-xl bg-[#f5f5f5] p-2 text-gray-900 shadow-lg">
+          <div className="bg-muted text-muted-foreground absolute -top-20 min-w-37.5 rounded-md p-2 shadow-lg">
             <button
               type="button"
               onClick={() => handleMenuItemClick(CanvasMode.MOVING)}
-              className={`inline-flex w-full items-center justify-between gap-3 rounded-md p-1 transition-colors hover:bg-blue-500 hover:text-white focus-visible:bg-blue-500 focus-visible:text-white ${isMoving ? "bg-blue-500 text-white" : ""}`}
+              className={`hover:bg-primary/15 hover:text-primary focus-visible:bg-primary/15 focus-visible:text-primary inline-flex w-full items-center justify-between gap-3 rounded p-1 transition-colors duration-150 ${isMoving ? "bg-primary/15 text-primary" : ""}`}
             >
               <span className="inline-flex items-center gap-1">
                 <MousePointer2 className="size-4" />
@@ -96,7 +96,7 @@ const PointerSelectButton = memo(
             <button
               type="button"
               onClick={() => handleMenuItemClick(CanvasMode.DRAGGING)}
-              className={`inline-flex w-full items-center justify-between gap-3 rounded-md p-1 transition-colors hover:bg-blue-500 hover:text-white focus-visible:bg-blue-500 focus-visible:text-white ${isDragging ? "bg-blue-500 text-white" : ""}`}
+              className={`hover:bg-primary/15 hover:text-primary focus-visible:bg-primary/15 focus-visible:text-primary inline-flex w-full items-center justify-between gap-3 rounded p-1 transition-colors duration-150 ${isDragging ? "bg-primary/15 text-primary" : ""}`}
             >
               <span className="inline-flex items-center gap-1">
                 <Hand className="size-4" />

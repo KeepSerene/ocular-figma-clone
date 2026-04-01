@@ -23,8 +23,13 @@ const IconButton = ({
     disabled={disabled}
     aria-label={ariaLabel}
     title={title}
+    aria-pressed={isActive}
     aria-disabled={disabled}
-    className={`flex min-h-7 min-w-7 items-center justify-center rounded-md text-gray-500 transition-colors focus-visible:outline-none hover:enabled:text-gray-700 focus-visible:enabled:text-gray-700 disabled:opacity-50 ${isActive ? "bg-blue-100 text-blue-700! hover:enabled:text-blue-700 focus-visible:enabled:text-blue-700" : ""}`}
+    className={`focus-visible:ring-ring focus-visible:ring-offset-card flex size-8 items-center justify-center rounded-lg text-sm transition-colors duration-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${
+      isActive
+        ? "bg-primary/15 text-primary"
+        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+    } `}
   >
     {children}
   </button>

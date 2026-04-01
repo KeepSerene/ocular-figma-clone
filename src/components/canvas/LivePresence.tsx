@@ -24,7 +24,7 @@ function Cursors() {
 }
 
 const getRgbColorObj = (colorObj: Color | null) => {
-  return colorObj ?? { r: 217, g: 217, b: 217 };
+  return colorObj ?? { r: 214, g: 214, b: 214 };
 };
 
 // To see live previews of what other users are drawing
