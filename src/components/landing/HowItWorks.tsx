@@ -78,13 +78,13 @@ export const HowItWorks = () => (
         ))}
       </ol>
 
-      {/* Bottom CTA */}
+      {/* CTA */}
       <div className="mt-16 text-center">
         <Link
-          href="/sign-up"
-          className="bg-primary text-primary-foreground inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)-1px)] px-7 text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+          href="/sign-in"
+          className="bg-primary text-primary-foreground inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)-1px)] px-7 text-sm font-semibold transition-all duration-150 hover:opacity-90 focus-visible:opacity-90 focus-visible:outline-none active:scale-[0.98]"
         >
-          Create your first design
+          Focus your vision
           <ArrowRight className="size-4" />
         </Link>
       </div>
