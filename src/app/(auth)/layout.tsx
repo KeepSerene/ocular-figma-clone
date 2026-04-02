@@ -116,7 +116,7 @@ async function AuthLayout({
               src="/ocular-auth-banner.jpg"
               width={1200}
               height={385}
-              alt=""
+              alt="Banner image of the Ocular collaborative canvas workspace"
             />
           </div>
         </div>

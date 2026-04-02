@@ -15,6 +15,8 @@ export default function Nav({ isAuthenticated }: NavProps) {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
+
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", onScroll);
@@ -50,6 +52,7 @@ export default function Nav({ isAuthenticated }: NavProps) {
               Features
             </a>
           </li>
+
           <li>
             <a
               href="#how-it-works"
@@ -94,6 +97,7 @@ export default function Nav({ isAuthenticated }: NavProps) {
           onClick={() => setMobileOpen((prev) => !prev)}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
+          aria-controls="landing-mobile-nav"
           className="flex size-9 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/[0.07] hover:text-white md:hidden"
         >
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -102,7 +106,10 @@ export default function Nav({ isAuthenticated }: NavProps) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-white/6 bg-[#0d0d0e]/95 px-6 py-5 md:hidden">
+        <div
+          id="landing-mobile-nav"
+          className="border-t border-white/6 bg-[#0d0d0e]/95 px-6 py-5 md:hidden"
+        >
           <ul className="flex flex-col gap-1" role="list">
             <li>
               <a

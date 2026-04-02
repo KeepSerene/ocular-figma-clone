@@ -105,7 +105,12 @@ export default function Hero({ isAuthenticated }: HeroProps) {
               <span className="size-2.5 rounded-full bg-emerald-500" />
             </div>
 
-            <Image src="/ocular-banner.webp" width={1200} height={634} alt="" />
+            <Image
+              src="/ocular-banner.webp"
+              width={1200}
+              height={634}
+              alt="Banner image of the Ocular collaborative canvas workspace"
+            />
           </div>
         </div>
       </div>

@@ -103,6 +103,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             minLength={8}
             maxLength={32}
             required
+            aria-describedby={mode === "sign-up" ? "password-hint" : undefined}
             autoComplete={
               mode === "sign-in" ? "current-password" : "new-password"
             }
@@ -110,7 +111,10 @@ export function AuthForm({ mode }: AuthFormProps) {
           />
 
           {mode === "sign-up" && (
-            <p className="text-muted-foreground/60 text-[0.7rem]">
+            <p
+              id="password-hint"
+              className="text-muted-foreground/60 text-[0.7rem]"
+            >
               Must be 8-32 characters.
             </p>
           )}
@@ -118,8 +122,16 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         {/* Error message */}
         {errorMessage && (
-          <div className="border-destructive/25 bg-destructive/6 flex items-start gap-2.5 rounded-md border px-3.5 py-3">
-            <AlertCircle className="text-destructive mt-0.5 size-4 shrink-0" />
+          <div
+            role="alert"
+            aria-atomic="true"
+            className="border-destructive/25 bg-destructive/6 flex items-start gap-2.5 rounded-md border px-3.5 py-3"
+          >
+            <AlertCircle
+              aria-hidden="true"
+              className="text-destructive mt-0.5 size-4 shrink-0"
+            />
+
             <p className="text-destructive text-sm leading-snug">
               {errorMessage}
             </p>

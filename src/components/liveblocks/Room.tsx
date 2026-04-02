@@ -20,6 +20,7 @@ function Room({
 }) {
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
   const [hasCopied, setHasCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -35,10 +36,14 @@ function Room({
   const copyUrlToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
+      setCopyError(null);
       setHasCopied(true);
       setTimeout(() => setHasCopied(false), 2000);
     } catch (error) {
       console.error("Failed to copy URL:", error);
+      setCopyError(
+        "Couldn't copy automatically. Please copy the URL from the address bar.",
+      );
     }
   };
 
@@ -61,7 +66,7 @@ function Room({
       <div className="bg-background flex min-h-dvh flex-col items-center justify-center p-6 text-center">
         <div className="border-border bg-card flex w-full max-w-md flex-col items-center gap-6 rounded-2xl border p-8 shadow-2xl">
           <div className="bg-primary/10 text-primary flex size-16 shrink-0 items-center justify-center rounded-full">
-            <MonitorX className="size-8" />
+            <MonitorX aria-hidden="true" className="size-8" />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -93,6 +98,10 @@ function Room({
               </>
             )}
           </button>
+
+          {copyError && (
+            <p className="text-destructive -mt-2 text-sm">{copyError}</p>
+          )}
         </div>
       </div>
     );

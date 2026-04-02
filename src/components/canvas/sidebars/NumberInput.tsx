@@ -39,10 +39,11 @@ const NumberInput = memo(
         return;
       }
 
-      const clamped = Math.min(
-        max ?? newValue,
-        Math.max(min ?? newValue, newValue),
-      );
+      let clamped = newValue;
+
+      if (min !== undefined) clamped = Math.max(min, clamped);
+      if (max !== undefined) clamped = Math.min(max, clamped);
+
       setUserInput(clamped.toString());
       onChange(clamped);
     };
@@ -66,7 +67,7 @@ const NumberInput = memo(
           onKeyDown={handleKeyDown}
           min={min}
           max={max}
-          aria-label="Enter apt value"
+          aria-label="Enter value"
           placeholder="0"
           className="border-input bg-muted text-foreground hover:border-border/80 focus:border-ring h-8 w-full rounded-md border pr-2 pl-6 text-xs transition-colors duration-150 outline-none"
         />

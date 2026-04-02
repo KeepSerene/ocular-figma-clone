@@ -37,8 +37,8 @@ function UserMenu({ email, collapsed = false }: UserMenuProps) {
     setIsSigningOut(true);
     try {
       await signOutAction();
-    } catch {
-      /* swallow — navigating away regardless */
+    } catch (error) {
+      console.error("Sign-out failed, redirecting anyway:", error);
     } finally {
       router.push("/sign-in");
     }

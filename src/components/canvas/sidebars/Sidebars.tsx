@@ -105,18 +105,21 @@ const Sidebars = memo(
         const layer = liveLayers.get(selectedLayerId);
         if (!layer) return;
 
+        const fill =
+          options.fill !== undefined ? hexToRgb(options.fill) : undefined;
+        const stroke =
+          options.stroke !== undefined ? hexToRgb(options.stroke) : undefined;
+
         layer.update({
           ...(options.x !== undefined && { x: options.x }),
           ...(options.y !== undefined && { y: options.y }),
           ...(options.width !== undefined && { width: options.width }),
           ...(options.height !== undefined && { height: options.height }),
-          ...(options.fill !== undefined && { fill: hexToRgb(options.fill) }),
+          ...(fill && { fill }),
           ...(options.cornerRadius !== undefined && {
             cornerRadius: options.cornerRadius,
           }),
-          ...(options.stroke !== undefined && {
-            stroke: hexToRgb(options.stroke),
-          }),
+          ...(stroke && { stroke }),
           ...(options.fontFamily !== undefined && {
             fontFamily: options.fontFamily,
           }),

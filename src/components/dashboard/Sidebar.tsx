@@ -216,8 +216,8 @@ export default function Sidebar({ email }: SidebarProps) {
         {/* ── Collapsed: shortcuts icon hint ── */}
         {collapsed && (
           <div
-            aria-label="Keyboard shortcuts"
-            title="Keyboard shortcuts"
+            aria-label="Shortcuts & controls"
+            title="Shortcuts & controls"
             className="flex flex-1 items-start justify-center pt-4"
           >
             <Keyboard className="text-muted-foreground/40 size-4" />

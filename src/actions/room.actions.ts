@@ -53,11 +53,10 @@ export async function updateRoomTitleAction(roomId: string, newTitle: string) {
     select: { title: true, ownerId: true },
   });
 
-  if (!room || room.ownerId !== session.user.id) {
+  if (room?.ownerId !== session.user.id) {
     throw new Error("Room not found or unauthorized");
   }
 
-  // If the title is identical, bail early to save a DB write and cache purge
   if (room.title === trimmedTitle) {
     return;
   }

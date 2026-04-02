@@ -10,7 +10,7 @@ const Cursor = memo(({ connectionId }: { connectionId: number }) => {
 
   const { x, y } = cursor;
   const color = connectionIdToColor(connectionId);
-  const name = info.name || "Anonymous";
+  const name = info?.name || "Anonymous";
   const initial = name.charAt(0).toUpperCase();
 
   return (

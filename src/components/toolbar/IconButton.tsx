@@ -4,6 +4,7 @@ interface IconButtonProps {
   onClick: () => void;
   children: React.ReactNode;
   isActive?: boolean;
+  isToggle?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
   title?: string;
@@ -13,6 +14,7 @@ const IconButton = ({
   onClick,
   children,
   isActive = false,
+  isToggle = false,
   disabled = false,
   ariaLabel = "",
   title = "",
@@ -23,7 +25,7 @@ const IconButton = ({
     disabled={disabled}
     aria-label={ariaLabel}
     title={title}
-    aria-pressed={isActive}
+    aria-pressed={isToggle ? isActive : undefined}
     aria-disabled={disabled}
     className={`focus-visible:ring-ring focus-visible:ring-offset-card flex size-8 items-center justify-center rounded-lg text-sm transition-colors duration-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${
       isActive

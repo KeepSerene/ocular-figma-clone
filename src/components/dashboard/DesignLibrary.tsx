@@ -199,6 +199,13 @@ function RoomCard({
     if (!isSelected) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("input, textarea, [contenteditable]")
+      ) {
+        return;
+      }
+
       if (event.key === "Backspace" && !isEditingTitle && canDelete) {
         event.preventDefault();
         setShowConfirmModal(true);
@@ -293,7 +300,7 @@ function RoomCard({
                   }}
                   aria-label="Edit title"
                   title="Edit title"
-                  className="text-muted-foreground hover:text-foreground shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="text-muted-foreground hover:text-foreground shrink-0 opacity-100 transition-opacity group-focus-within:opacity-100 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <Pencil className="size-3" />
                 </button>
