@@ -74,7 +74,7 @@ const Footer = () => (
                   rel="noopener noreferrer"
                   aria-label={link.label}
                   title={link.label}
-                  className="flex size-9 items-center justify-center rounded-lg border border-white/[0.07] bg-white/4 text-white/40 transition-all duration-150 hover:border-white/[0.14] hover:bg-white/8 hover:text-white/75"
+                  className="flex size-9 items-center justify-center rounded-lg border border-white/[0.07] bg-white/4 text-white/40 transition-all duration-150 hover:border-white/14 hover:bg-white/8 hover:text-white/75 focus-visible:border-white/14 focus-visible:bg-white/8 focus-visible:text-white/75 focus-visible:outline-none"
                 >
                   {link.icon}
                 </a>
@@ -93,7 +93,7 @@ const Footer = () => (
             href={SOCIAL_LINKS.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-white/40 underline-offset-2 transition-colors hover:text-white/60 hover:underline"
+            className="font-medium text-white/40 underline-offset-2 transition-colors hover:text-white/60 hover:underline focus-visible:text-white/60 focus-visible:underline focus-visible:outline-none"
           >
             KeepSerene
           </a>
