@@ -55,6 +55,11 @@ async function DashboardPage() {
             )}
           />
         </div>
+
+        {/* Copyright */}
+        <footer className="border-border text-muted-foreground mt-auto border-t p-2 text-center text-xs select-none">
+          &copy; {new Date().getFullYear()} KeepSerene.
+        </footer>
       </section>
     </main>
   );
