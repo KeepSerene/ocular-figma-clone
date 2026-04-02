@@ -68,7 +68,7 @@ export default function Hero({ isAuthenticated }: HeroProps) {
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href={ctaHref}
-            className="bg-primary text-primary-foreground inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)-1px)] px-6 text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+            className="bg-primary text-primary-foreground inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)-1px)] px-6 text-sm font-semibold transition-all duration-150 hover:opacity-90 focus-visible:opacity-90 focus-visible:outline-none active:scale-[0.98]"
           >
             {ctaLabel}
             <ArrowRight className="size-4" />
@@ -78,7 +78,7 @@ export default function Hero({ isAuthenticated }: HeroProps) {
             href="https://github.com/KeepSerene/ocular-figma-clone"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)-1px)] border border-white/12 bg-white/4 px-6 text-sm font-medium text-white/55 transition-all duration-150 hover:bg-white/8 hover:text-white/80 active:scale-[0.98]"
+            className="inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)-1px)] border border-white/12 bg-white/4 px-6 text-sm font-medium text-white/55 transition-all duration-150 hover:bg-white/8 hover:text-white/80 focus-visible:bg-white/8 focus-visible:text-white/80 focus-visible:outline-none active:scale-[0.98]"
           >
             <GithubIcon className="size-4" />
             View on GitHub

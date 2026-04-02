@@ -57,13 +57,15 @@ function FeatureCard({ feature }: { feature: Feature }) {
   const { icon: Icon, title, description } = feature;
 
   return (
-    <li className="group border-border bg-card rounded-xl border p-6 transition-all duration-200 hover:border-(--primary)/30 hover:shadow-md">
-      {/* Icon container */}
+    <li
+      tabIndex={0}
+      className="group border-border bg-card hover:border-primary/30 focus-within:border-primary/30 rounded-xl border p-6 transition-all duration-200 focus-within:shadow-md focus-within:outline-none hover:shadow-md"
+    >
       <div
-        className="mb-5 flex size-10 items-center justify-center rounded-lg"
         style={{
           backgroundColor: "oklch(0.6716 0.1368 48.5130 / 0.08)",
         }}
+        className="mb-5 flex size-10 items-center justify-center rounded-lg"
       >
         <Icon className="text-primary size-5" strokeWidth={1.75} />
       </div>
@@ -80,7 +82,6 @@ function FeatureCard({ feature }: { feature: Feature }) {
 const Features = () => (
   <section id="features" className="bg-background py-28">
     <div className="mx-auto max-w-6xl px-6">
-      {/* Section header */}
       <div className="mx-auto mb-16 max-w-2xl text-center">
         <p className="text-primary mb-3 text-[0.65rem] font-semibold tracking-[0.14em] uppercase">
           What&apos;s inside
@@ -96,7 +97,6 @@ const Features = () => (
         </p>
       </div>
 
-      {/* Feature grid */}
       <ul
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         role="list"
