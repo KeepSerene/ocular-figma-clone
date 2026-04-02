@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ZodError } from "zod";
 import { signUpFormSchema } from "~/validations";
 import { signIn, signOut } from "~/server/auth";
@@ -18,6 +19,8 @@ export async function signInAction(
       redirectTo: "/dashboard",
     });
   } catch (error) {
+    if (isRedirectError(error)) throw error;
+
     console.error("Error in sign in action:", error);
 
     if (error instanceof AuthError) {
@@ -52,14 +55,15 @@ export async function signUpAction(
       data: { email, password: hash },
     });
 
-    // Auto sign-in with the same plain-text password —
-    // authorize() in config.ts will bcrypt.compare it normally
+    // Auto sign-in with the same plain-text password
     await signIn("credentials", {
       email,
       password,
       redirectTo: "/dashboard",
     });
   } catch (error) {
+    if (isRedirectError(error)) throw error;
+
     console.error("Error in sign up action:", error);
 
     if (error instanceof ZodError) {
@@ -67,12 +71,10 @@ export async function signUpAction(
     }
 
     if (error instanceof AuthError) {
-      // User was created but session issuance failed — very rare
+      // User was created but session issuance failed
       return "Account created. Please sign in manually.";
     }
 
-    // Re-throw everything else, importantly NEXT_REDIRECT which
-    // signIn() throws internally on success — must not be swallowed
     throw error;
   }
 }
