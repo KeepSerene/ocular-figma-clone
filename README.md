@@ -1,3 +1,3 @@
 # Ocular
 
-> Figma clone — work in progress.
+> A Figma clone. Going to add more details soon...

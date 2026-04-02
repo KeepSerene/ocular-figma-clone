@@ -13,7 +13,6 @@ interface LayerButtonProps {
 
 const LayerButton = memo(
   ({ layerId, isSelected, icon: ButtonIcon, label }: LayerButtonProps) => {
-    // Select the layer user clicks on in the left sidebar
     const updateSelection = useMutation(
       ({ setMyPresence }, layerId: string) => {
         setMyPresence({ selections: [layerId] }, { addToHistory: true });
@@ -25,11 +24,17 @@ const LayerButton = memo(
       <button
         type="button"
         onClick={() => updateSelection(layerId)}
-        className={`flex w-full items-center gap-2 rounded px-1.5 py-1 text-left transition-colors duration-200 hover:bg-gray-100 focus-visible:bg-gray-100 ${isSelected ? "bg-[#bce3ff]" : ""}`}
+        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors duration-100 focus-visible:outline-none ${
+          isSelected
+            ? "bg-primary/15 text-primary"
+            : "text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground"
+        } `}
       >
-        <ButtonIcon className="size-4 text-gray-500" />
+        <ButtonIcon
+          className={`size-3.5 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
+        />
 
-        <span className="text-sm">{label}</span>
+        <span className="truncate">{label}</span>
       </button>
     );
   },

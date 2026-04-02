@@ -6,12 +6,12 @@ import Ellipse from "./Ellipse";
 import Path from "./Path";
 import Text from "./Text";
 
-interface CustomLayerProps {
+interface LayerRendererProps {
   id: string;
   onLayerPointerDown: (layerId: string, event: React.PointerEvent) => void;
 }
 
-const CustomLayer = memo(({ id, onLayerPointerDown }: CustomLayerProps) => {
+const LayerRenderer = memo(({ id, onLayerPointerDown }: LayerRendererProps) => {
   const layer = useStorage((root) => root.layers.get(id));
 
   if (!layer) {
@@ -56,6 +56,6 @@ const CustomLayer = memo(({ id, onLayerPointerDown }: CustomLayerProps) => {
   }
 });
 
-CustomLayer.displayName = "CustomLayer";
+LayerRenderer.displayName = "LayerRenderer";
 
-export default CustomLayer;
+export default LayerRenderer;

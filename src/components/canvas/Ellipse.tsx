@@ -24,7 +24,7 @@ const Ellipse = memo(({ id, layer, onLayerPointerDown }: EllipseProps) => {
         cx={width / 2}
         cy={height / 2}
         fill="none"
-        stroke="#0b99ff"
+        stroke="oklch(0.7214 0.1337 49.9802)"
         strokeWidth={4}
         className="pointer-events-none opacity-0 group-hover:opacity-100"
       />

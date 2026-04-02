@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2, UserPlus2, X } from "lucide-react";
 import { memo, useState } from "react";
 import z from "zod";
 import {
@@ -21,13 +21,9 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
   const [email, setEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | undefined>(undefined);
-
-  // Track deletion state per invitee instead of one global boolean
   const [deletingByInvitee, setDeletingByInvitee] = useState<
     Record<string, boolean>
   >({});
-
-  // Track deletion errors per invitee instead of one global error
   const [deleteErrorByInvitee, setDeleteErrorByInvitee] = useState<
     Record<string, string | undefined>
   >({});
@@ -37,7 +33,7 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
     const parsed = z.string().email().safeParse(email);
 
     if (!parsed.success) {
-      setInviteError("Invalid email address");
+      setInviteError("Please enter a valid email address.");
       return;
     }
 
@@ -50,7 +46,7 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
     } catch (error) {
       console.error("Failed to invite user:", error);
       setInviteError(
-        error instanceof Error ? error.message : "Oops! Something went wrong.",
+        error instanceof Error ? error.message : "Something went wrong.",
       );
     } finally {
       setIsInviting(false);
@@ -61,13 +57,7 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
     roomId: string,
     inviteeEmail: string,
   ) => {
-    // Mark only this invitee as deleting
-    setDeletingByInvitee((prev) => ({
-      ...prev,
-      [inviteeEmail]: true,
-    }));
-
-    // Clear just this invitee's previous delete error
+    setDeletingByInvitee((prev) => ({ ...prev, [inviteeEmail]: true }));
     setDeleteErrorByInvitee((prev) => ({
       ...prev,
       [inviteeEmail]: undefined,
@@ -75,86 +65,72 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
 
     try {
       await deleteInvitationAction(roomId, inviteeEmail);
-
-      // Clear the error again after a successful delete, just in case
-      setDeleteErrorByInvitee((prev) => ({
-        ...prev,
-        [inviteeEmail]: undefined,
-      }));
     } catch (error) {
-      console.error("Failed to delete invitation:", error);
-
-      // Store the error for only this invitee row
+      console.error("Failed to revoke invitation:", error);
       setDeleteErrorByInvitee((prev) => ({
         ...prev,
         [inviteeEmail]:
-          error instanceof Error
-            ? error.message
-            : "Oops! Something went wrong.",
+          error instanceof Error ? error.message : "Something went wrong.",
       }));
     } finally {
-      // Always reset only this invitee's loading state
-      setDeletingByInvitee((prev) => ({
-        ...prev,
-        [inviteeEmail]: false,
-      }));
+      setDeletingByInvitee((prev) => ({ ...prev, [inviteeEmail]: false }));
     }
   };
 
   return (
     <>
-      {/* Modal trigger button */}
+      {/* Trigger — Share button */}
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="size-fit rounded-md bg-[#0c8ce9] px-4 py-2 text-xs font-medium text-white transition-colors duration-150 hover:bg-[#0c8ce9]/90 focus-visible:bg-[#0c8ce9]/90 focus-visible:outline-none"
+        className="btn btn-primary btn-sm shrink-0 gap-1"
       >
+        <UserPlus2 className="size-3.5" />
         Share
       </button>
 
-      {/* Invite modal */}
+      {/* Modal */}
       {isOpen && (
-        // Backdrop overlay
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-10 flex items-center justify-center bg-gray-600/50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         >
-          {/* Modal */}
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="invite-modal-title"
-            aria-describedby="invite-modal-description"
             onClick={(event) => event.stopPropagation()}
-            className="flex w-full max-w-md flex-col rounded-xl bg-white shadow-xl"
+            className="border-border bg-card flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border shadow-2xl"
           >
-            {/* Heading */}
-            <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-              <h3 id="invite-modal-title" className="text-sm font-semibold">
-                Share this design
-              </h3>
+            {/* Header */}
+            <div className="border-border flex items-center justify-between border-b px-5 py-4">
+              <div>
+                <h3
+                  id="invite-modal-title"
+                  className="text-foreground text-sm font-semibold"
+                >
+                  Share design
+                </h3>
 
-              <p id="invite-modal-description" className="sr-only">
-                Invite users to collaborate on this design by email.
-              </p>
+                <p id="invite-modal-description" className="sr-only">
+                  Invite collaborators by email.
+                </p>
+              </div>
 
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                aria-label="Close share modal"
-                title="Close"
-                className="rounded-full p-1 transition-colors duration-150 hover:bg-gray-100 focus-visible:bg-gray-100 focus-visible:outline-none"
+                aria-label="Close"
+                className="btn btn-icon btn-ghost btn-sm"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            <div className="space-y-2 p-4">
+            {/* Body */}
+            <div className="flex flex-col gap-4 p-5">
               {/* Invite form */}
-              <form
-                onSubmit={inviteUser}
-                className="flex h-8 items-center gap-x-2"
-              >
+              <form onSubmit={inviteUser} className="flex items-center gap-2">
                 <label htmlFor="invite-email" className="sr-only">
                   Email address
                 </label>
@@ -163,76 +139,80 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
                   type="email"
                   id="invite-email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   autoFocus
-                  placeholder="Search by email"
-                  className="size-full rounded-md border-2 border-[#f5f5f5] bg-[#f5f5f5] px-3 py-1 text-xs transition-colors duration-200 outline-none placeholder:text-gray-500 hover:border-[#e8e8e8] focus:border-blue-500"
+                  placeholder="colleague@email.com"
+                  className="border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:border-ring h-9 flex-1 rounded-md border px-3 text-sm transition-colors duration-150 focus:outline-none"
                 />
 
                 <button
                   type="submit"
                   disabled={isInviting}
-                  className="h-full rounded-md bg-[#0c8ce9] px-4 py-2 text-xs font-medium text-white transition-colors duration-150 hover:bg-[#0c8ce9]/90 focus-visible:bg-[#0c8ce9]/90 focus-visible:outline-none disabled:opacity-50"
+                  className="btn btn-primary btn-sm shrink-0"
                 >
-                  {isInviting ? "Inviting..." : "Invite"}
+                  {isInviting ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    "Invite"
+                  )}
                 </button>
               </form>
 
               {inviteError && (
-                <p className="text-xs text-red-500">{inviteError}</p>
+                <p className="text-destructive text-xs">{inviteError}</p>
               )}
 
+              {/* Invited users list */}
               {invitees.length > 0 && (
-                <>
-                  <p className="text-xs text-gray-500">Invited users</p>
+                <div className="flex flex-col gap-2">
+                  <p className="text-muted-foreground text-[11px] font-medium">
+                    People with access
+                  </p>
 
-                  <ul className="space-y-2">
+                  <ul className="divide-border flex flex-col divide-y">
                     {invitees.map((invitee) => {
-                      // Use invitee email as the row key for loading/error lookup
                       const isDeleting = deletingByInvitee[invitee.email];
                       const deleteError = deleteErrorByInvitee[invitee.email];
 
                       return (
                         <React.Fragment key={invitee.id}>
-                          <li className="flex items-center justify-between py-1">
-                            <div className="flex items-center gap-x-2">
+                          <li className="flex items-center justify-between py-2.5">
+                            <div className="flex items-center gap-2.5">
                               <UserAvatar
                                 name={invitee.email}
-                                className="size-6"
+                                className="size-7"
                               />
+                              <div className="flex flex-col">
+                                <span className="text-foreground max-w-40 truncate text-xs font-medium">
+                                  {invitee.email}
+                                </span>
 
-                              <span className="text-xs select-none">
-                                {invitee.email}
-                              </span>
+                                <span className="text-muted-foreground text-[10px]">
+                                  Can edit
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="flex items-center gap-x-1">
-                              <span className="text-xs text-gray-500">
-                                Full-Access
-                              </span>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDeleteInvitation(roomId, invitee.email)
-                                }
-                                disabled={isDeleting}
-                                aria-label={`Revoke access for ${invitee.email}`}
-                                title="Revoke access"
-                                className="text-gray-400 transition-colors duration-150 hover:text-gray-500 focus-visible:text-gray-500 focus-visible:outline-none disabled:opacity-50"
-                              >
-                                {isDeleting ? (
-                                  <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                  <X className="size-4" />
-                                )}
-                              </button>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteInvitation(roomId, invitee.email)
+                              }
+                              disabled={isDeleting}
+                              aria-label={`Revoke access for ${invitee.email}`}
+                              title="Revoke access"
+                              className="btn btn-icon btn-ghost btn-sm text-muted-foreground hover:text-destructive disabled:opacity-50"
+                            >
+                              {isDeleting ? (
+                                <Loader2 className="size-3.5 animate-spin" />
+                              ) : (
+                                <X className="size-3.5" />
+                              )}
+                            </button>
                           </li>
 
-                          {/* Show delete error only for the matching invitee row */}
                           {deleteError && (
-                            <p className="text-[10px] text-red-500">
+                            <p className="text-destructive pb-1 text-[10px]">
                               {deleteError}
                             </p>
                           )}
@@ -240,7 +220,7 @@ const InviteModal = memo(({ roomId, invitees }: InviteModalProps) => {
                       );
                     })}
                   </ul>
-                </>
+                </div>
               )}
             </div>
           </section>

@@ -23,10 +23,9 @@ const NumberInput = memo(
   }: NumberInputProps) => {
     const [userInput, setUserInput] = useState(value.toString());
 
-    // Set values live as user changes size and position of layers on the canvas (instant UI updates)
     useEffect(() => {
       setUserInput(value.toString());
-    }, [value, setUserInput]);
+    }, [value]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       setUserInput(event.target.value);
@@ -36,29 +35,29 @@ const NumberInput = memo(
       const newValue = parseFloat(userInput);
 
       if (isNaN(newValue)) {
-        // Reset
         setUserInput(value.toString());
         return;
       }
 
-      const clampedVal = Math.min(
-        max ?? newValue,
-        Math.max(min ?? newValue, newValue),
-      );
-      setUserInput(clampedVal.toString());
-      onChange(clampedVal);
+      let clamped = newValue;
+
+      if (min !== undefined) clamped = Math.max(min, clamped);
+      if (max !== undefined) clamped = Math.min(max, clamped);
+
+      setUserInput(clamped.toString());
+      onChange(clamped);
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter") {
         event.preventDefault();
-        (event.currentTarget as HTMLInputElement).blur(); // triggers commitUserInput()
+        (event.currentTarget as HTMLInputElement).blur();
       }
     };
 
     return (
       <div className={`relative h-fit ${className ?? "w-28"}`}>
-        <InputIcon className="absolute top-1/2 left-1.5 size-4 -translate-y-1/2 text-gray-400" />
+        <InputIcon className="text-muted-foreground/60 pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2" />
 
         <input
           type="number"
@@ -68,8 +67,9 @@ const NumberInput = memo(
           onKeyDown={handleKeyDown}
           min={min}
           max={max}
+          aria-label="Enter value"
           placeholder="0"
-          className={`h-fit w-full rounded-lg border-2 border-[#f5f5f5] bg-[#f5f5f5] px-2 py-1 pl-6 text-xs transition-colors duration-200 outline-none hover:border-[#e8e8e8] focus:border-blue-600`}
+          className="border-input bg-muted text-foreground hover:border-border/80 focus:border-ring h-8 w-full rounded-md border pr-2 pl-6 text-xs transition-colors duration-150 outline-none"
         />
       </div>
     );

@@ -16,7 +16,7 @@ import {
   resizeBounds,
   findIntersectingLayerIdsWithRect,
 } from "~/lib/utils";
-import CustomLayer from "./CustomLayer";
+import LayerRenderer from "./LayerRenderer";
 import {
   CanvasMode,
   LayerType,
@@ -49,7 +49,7 @@ interface CanvasProps {
 }
 
 const MAX_LAYERS = 100;
-const ON_CANVAS_DEFAULT_COLOR = { r: 217, g: 217, b: 217 } as Color;
+const ON_CANVAS_DEFAULT_COLOR = { r: 214, g: 214, b: 214 } as Color;
 
 function Canvas({ roomId, roomTitle, invitees }: CanvasProps) {
   const canvasColor = useStorage((root) => root.canvasColor);
@@ -67,7 +67,7 @@ function Canvas({ roomId, roomTitle, invitees }: CanvasProps) {
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
 
   const hexColor = useMemo(() => {
-    return canvasColor ? colorObjToHex(canvasColor) : "#1e1e1e";
+    return canvasColor ? colorObjToHex(canvasColor) : "#1a1a1e";
   }, [canvasColor]);
 
   // ---------------------------------------------------------------------------
@@ -668,7 +668,7 @@ function Canvas({ roomId, roomTitle, invitees }: CanvasProps) {
             >
               {/* Render each persisted layer */}
               {layerIds?.map((id) => (
-                <CustomLayer
+                <LayerRenderer
                   key={id}
                   id={id}
                   onLayerPointerDown={handleLayerPointerDown}
@@ -721,7 +721,7 @@ function Canvas({ roomId, roomTitle, invitees }: CanvasProps) {
                     )}
                     strokeWidth={1}
                     strokeDasharray="4 2"
-                    className="pointer-events-none fill-blue-600/5 stroke-blue-600"
+                    className="fill-primary/5 stroke-primary pointer-events-none"
                   />
                 )}
 

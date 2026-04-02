@@ -131,7 +131,7 @@ const SelectionBox = memo(
           style={{
             transform: `translate(${bounds.x}px,${bounds.y}px)`,
           }}
-          className="pointer-events-none fill-transparent stroke-[#0b99ff] stroke-[1px]"
+          className="stroke-primary pointer-events-none fill-transparent stroke-[1px]"
         />
 
         {/* Dimension label background pill */}
@@ -141,7 +141,7 @@ const SelectionBox = memo(
           width={textWidth + TEXT_BOX_PADDING}
           height={20}
           rx={4}
-          className="pointer-events-none fill-[#0b99ff]"
+          className="fill-primary pointer-events-none"
         />
 
         {/* Dimension label text (e.g. "200x100") */}
@@ -151,7 +151,7 @@ const SelectionBox = memo(
           style={{
             transform: `translate(${bounds.x + bounds.width / 2}px,${bounds.y + bounds.height + 23}px)`,
           }}
-          className="pointer-events-none fill-white text-[11px] select-none"
+          className="fill-primary-foreground pointer-events-none text-[11px] select-none"
         >
           {Math.round(bounds.width)}x{Math.round(bounds.height)}
         </text>
@@ -171,7 +171,7 @@ const SelectionBox = memo(
                 height: RESIZE_HANDLE_SIZE,
                 transform: `translate(${tx}px,${ty}px)`,
               }}
-              className="fill-white stroke-[#0b99ff] stroke-[1px]"
+              className="fill-primary/80 stroke-primary stroke-[1px]"
             />
           ))}
       </>

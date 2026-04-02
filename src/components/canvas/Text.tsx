@@ -114,7 +114,7 @@ const Text = memo(({ id, layer, onLayerPointerDown }: TextProps) => {
             width={width}
             height={height}
             fill="none"
-            stroke="#0b99ff"
+            stroke="oklch(0.7214 0.1337 49.9802)"
             strokeWidth={2}
             className="pointer-events-none opacity-0 group-hover:opacity-100"
           />

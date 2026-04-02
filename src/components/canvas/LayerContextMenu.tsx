@@ -70,12 +70,12 @@ const LayerContextMenu = memo(({ camera }: { camera: Camera }) => {
       style={{
         transform: `translate(calc(${x}px - 50%), calc(${y - 16}px - 100%))`,
       }}
-      className="absolute flex min-w-37.5 flex-col rounded-xl bg-[#f5f5f5] p-2 text-gray-900 shadow-lg"
+      className="bg-muted text-muted-foreground absolute flex min-w-37.5 flex-col rounded-md p-2 shadow-lg"
     >
       <button
         type="button"
         onClick={bringToFront}
-        className="inline-flex w-full items-center gap-2 rounded-md p-1 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus-visible:bg-blue-500 focus-visible:text-white"
+        className="hover:bg-primary/15 hover:text-primary focus-visible:bg-primary/15 focus-visible:text-primary inline-flex w-full items-center gap-2 rounded-md p-1 transition-colors duration-200"
       >
         <BringToFront className="size-4" />
         <span className="text-sm">Bring to front</span>
@@ -84,7 +84,7 @@ const LayerContextMenu = memo(({ camera }: { camera: Camera }) => {
       <button
         type="button"
         onClick={sendToBack}
-        className="inline-flex w-full items-center gap-2 rounded-md p-1 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus-visible:bg-blue-500 focus-visible:text-white"
+        className="hover:bg-primary/15 hover:text-primary focus-visible:bg-primary/15 focus-visible:text-primary inline-flex w-full items-center gap-2 rounded p-1 transition-colors duration-200"
       >
         <SendToBack className="size-4" />
         <span className="text-sm">Send to back</span>

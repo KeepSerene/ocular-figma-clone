@@ -41,23 +41,31 @@ export async function updateRoomTitleAction(roomId: string, newTitle: string) {
     throw new Error("Unauthorized: no active session");
   }
 
-  if (!newTitle.trim() || newTitle.length > 50) {
+  const trimmedTitle = newTitle.trim();
+
+  if (!trimmedTitle || trimmedTitle.length > 50) {
     throw new Error("Invalid title");
   }
 
-  const result = await db.room.updateMany({
-    where: {
-      id: roomId,
-      ownerId: session.user.id,
-    },
-    data: {
-      title: newTitle,
-    },
+  // Fetch the room to verify ownership AND check the current title
+  const room = await db.room.findUnique({
+    where: { id: roomId },
+    select: { title: true, ownerId: true },
   });
 
-  if (result.count === 0) {
+  if (room?.ownerId !== session.user.id) {
     throw new Error("Room not found or unauthorized");
   }
+
+  if (room.title === trimmedTitle) {
+    return;
+  }
+
+  // Proceed with the update
+  await db.room.update({
+    where: { id: roomId },
+    data: { title: trimmedTitle },
+  });
 
   revalidatePath("/dashboard");
 }

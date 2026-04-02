@@ -34,8 +34,8 @@ function Toolbar({
   zoomOut,
 }: ToolbarProps) {
   return (
-    <div className="fixed bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center justify-center rounded-lg bg-white p-1 shadow-[0_0_3px_0_rgba(0,0,0,0.18)]">
-      <div className="flex items-center justify-center gap-3">
+    <div className="border-border bg-card fixed bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center rounded-xl border p-1 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+      <div className="flex items-center gap-0.5">
         <PointerSelectButton
           isActive={
             canvasState.mode === CanvasMode.MOVING ||
@@ -87,21 +87,21 @@ function Toolbar({
         />
 
         {/* Separator */}
-        <div className="w-px self-stretch bg-black/15" />
+        <div className="bg-border mx-1 h-5 w-px" />
 
-        {/* Undo & redo buttons */}
-        <div className="flex items-center justify-center">
+        {/* Undo / Redo */}
+        <div className="flex items-center gap-0.5">
           <UndoButton onClick={undo} disabled={!canUndo} />
           <RedoButton onClick={redo} disabled={!canRedo} />
         </div>
 
         {/* Separator */}
-        <div className="w-px self-stretch bg-black/15" />
+        <div className="bg-border mx-1 h-5 w-px" />
 
-        {/* Zoom in & out buttons */}
-        <div className="flex items-center justify-center">
-          <ZoomInButton onClick={zoomIn} disabled={!canZoomIn} />
+        {/* Zoom */}
+        <div className="flex items-center gap-0.5">
           <ZoomOutButton onClick={zoomOut} disabled={!canZoomOut} />
+          <ZoomInButton onClick={zoomIn} disabled={!canZoomIn} />
         </div>
       </div>
     </div>
