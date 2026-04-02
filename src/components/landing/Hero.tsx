@@ -8,7 +8,7 @@ interface HeroProps {
 }
 
 export default function Hero({ isAuthenticated }: HeroProps) {
-  const ctaHref = isAuthenticated ? "/dashboard" : "/sign-up";
+  const ctaHref = isAuthenticated ? "/dashboard" : "/sign-in";
   const ctaLabel = isAuthenticated ? "Open Dashboard" : "Design for free";
 
   return (
@@ -109,7 +109,7 @@ export default function Hero({ isAuthenticated }: HeroProps) {
               src="/ocular-banner.webp"
               width={1200}
               height={634}
-              alt="Banner image of the Ocular collaborative canvas workspace"
+              alt="Ocular — Design in Focus"
             />
           </div>
         </div>

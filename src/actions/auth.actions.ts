@@ -2,7 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ZodError } from "zod";
 import { signUpFormSchema } from "~/validations";
 import { signIn, signOut } from "~/server/auth";
@@ -19,6 +19,8 @@ export async function signInAction(
       redirectTo: "/dashboard",
     });
   } catch (error) {
+    if (isRedirectError(error)) throw error;
+
     console.error("Error in sign in action:", error);
 
     if (error instanceof AuthError) {
@@ -30,8 +32,6 @@ export async function signInAction(
       }
     }
 
-    // Re-throw anything that isn't an actual AuthError
-    // so Next.js can handle it
     throw error;
   }
 }
@@ -45,32 +45,38 @@ export async function signUpAction(
       email: formData.get("email"),
       password: formData.get("password"),
     });
-    const user = await db.user.findUnique({
-      where: { email },
-    });
 
-    if (user) {
-      return "User already exists";
-    }
+    const user = await db.user.findUnique({ where: { email } });
+
+    if (user) return "User already exists";
 
     const hash = await bcrypt.hash(password, 10);
     await db.user.create({
-      data: {
-        email,
-        password: hash,
-      },
+      data: { email, password: hash },
+    });
+
+    // Auto sign-in with the same plain-text password
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/dashboard",
     });
   } catch (error) {
+    if (isRedirectError(error)) throw error;
+
     console.error("Error in sign up action:", error);
 
     if (error instanceof ZodError) {
       return error.errors.map((err) => err.message).join(", ");
     }
 
-    return "An unexpected error occurred";
-  }
+    if (error instanceof AuthError) {
+      // User was created but session issuance failed
+      return "Account created. Please sign in manually.";
+    }
 
-  redirect("/sign-in");
+    throw error;
+  }
 }
 
 export async function signOutAction() {
